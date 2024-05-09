@@ -1,79 +1,47 @@
 import gymnasium as gym
-import numpy as np
-import time
-import pygame
-from agent import PIDController
+from enum import Enum
 
-env = gym.make('Pendulum-v1', g=9.81, render_mode="human")
+# class syntax
+class AvailableEnvironments(Enum):
+    Walker2d = "Walker2d-v4"
+    Walker2dtest = "Walker2d-v5"
 
-# Then we reset this environment
-observation = env.reset()
-# Observation and action space 
-# select render mode to human
-env.render()
+    @classmethod
+    def has_value(cls, value):
+        return value in cls._value2member_map_
 
-observed_space = env.observation_space
-action_space = env.action_space
-print("The observation space:{}" .format(observed_space))
-print("The action space: {}".format(action_space))
+class Environment:
+    def __init__(self, env_name):
+        self.env = gym.make(env_name, render_mode="human")
+        self.observation = self.env.reset()
+        self.action_space = self.env.action_space
+        self.observation_space = self.env.observation_space
+        self.done = False
 
-# Perform 10 random actions
-while True:
-  # Take a random action
-  action = env.action_space.sample()
-  print("Action taken:", action)
+    def step(self, action):
+        self.last_observation = self.observation
+        self.observation, reward, terminated, truncated, info  = self.env.step(action)
+        self.done = terminated or truncated
+        return self.observation, reward, self.done, info
 
-  # Do this action in the environment and get
-  # next_state, reward, done and info
-  obs, reward, terminated, truncated, info = env.step(action)
-  # If the game is done (in our case we land, crashed or timeout)
-  if terminated or truncated:
-      # Reset the environment
-      print("Environment is reset")
-      observation = env.reset()
+    def reset(self):
+        self.observation = self.env.reset()
+        return self.observation
 
-# pygame.init()
-# DISPLAYSURF = pygame.display.set_mode((450, 450))
-# clock = pygame.time.Clock()
-# pygame.display.set_caption('Hello World!')
-# pygame.display.flip()
+    def render(self):
+        self.env.render()
 
-# env = gym.make('Pendulum-v1', g=9.81,render_mode="rgb_array")
+    def close(self):
+        self.env.close()
 
-# dt = env.unwrapped.dt # Time step of the simulation
+    def get_observation_space(self):
+        return self.observation_space.shape[0]
 
-# Choose appropriate PID gains (experimentation is key)
-# controller = PIDController(kp=0.05, ki=0.03, kd=0.02)
-
-# state = env.reset()
-# image = env.render()
-
-# Convert image to pygame surface
-# image = pygame.surfarray.make_surface(image)
-# DISPLAYSURF.blit(image, (0, 0))
-# pygame.display.update()
-
-
-# print("Initial state:", state)
-# print("sin(theta):", state[0][0], "cos(theta):", state[0][1], "theta_dot:", state[0][2])
-# terminated = truncated = False
-
-# id = 0
-# while not terminated or not truncated:
-#   Get control action based on current state
-#   action = controller.control(state, dt)
-
-#   Take action and observe next state, reward, etc.
-#   next_state, reward,terminated, truncated, info = env.step(action)
-#   state = next_state
-
-#   time.sleep(0.01)
-#   image = env.render()
-#   Convert image to pygame surface
-#   image = pygame.surfarray.make_surface(image)
-#   DISPLAYSURF.blit(image, (0, 0))
-#   pygame.display.update()
-
-#   id += 1
-
-# env.close()
+    def get_action_space(self):
+        return self.action_space.shape[0]
+    
+    def get_current_observation(self):
+        return self.observation
+    
+    def fitness(self):
+        return 0.0 # Placeholder for the fitness function
