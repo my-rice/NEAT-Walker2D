@@ -20,7 +20,9 @@ class LeggedRobot(Agent):
     
     def compute_action(self, observation: np.ndarray) -> np.ndarray:
         # Compute the action based on the network 
-        self.action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        
+        # compute a random action for now
+        self.action = np.random.uniform(-1, 1, self.action_space_dim)
         return self.action
 
     def update_agent(self, fitness: float) -> None:

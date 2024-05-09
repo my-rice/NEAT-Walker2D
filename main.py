@@ -28,7 +28,9 @@ def main(cfg):
         while not done:
             action = agent.compute_action(observation)
             observation, reward, done, info = env.step(action)
-            agent.update_agent(env.fitness())
+
+            print("Fitness: ", env.fitness())
+            #agent.update_agent(env.fitness())
             if(cfg.render):
                 env.render()
     env.close()
