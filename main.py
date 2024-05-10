@@ -12,8 +12,8 @@ def main(cfg):
         raise RuntimeError(f"Got missing keys in config:\n{missing_keys}")
     assert AvailableEnvironments.has_value(cfg.env_name)
     assert AvailableAgents.has_value(cfg.agent_name)
-    assert (cfg.max_episodes > 0)
-    assert (cfg.render is True or cfg.render is False)
+    assert cfg.max_episodes > 0
+    assert cfg.render is True or cfg.render is False
     env = Environment(cfg.env_name)
         
     observation_space_dim = env.get_observation_space()
