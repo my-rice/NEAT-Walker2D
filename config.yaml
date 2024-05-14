@@ -3,3 +3,5 @@ agent_name: LeggedRobot
 experiment_name: test  # Name of the experiment
 max_episodes: 300
 render: True
+generations: 1000
+neat_config: config-neat.ini
