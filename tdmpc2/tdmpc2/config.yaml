@@ -1,17 +1,25 @@
 defaults:
     - override hydra/launcher: submitit_local
 
+# TODO(all): remove useless lines parameters from here
+
+fill_buffer_steps: 0 # TODO(my-rice): consider remove this line from here and the other parts of the code # you have to add the more 5*max_episode_length (5000) steps to this number
+
 # environment
-task: walker-walk
+task: walker-walk_custom
 obs: state
 
 # evaluation
-checkpoint: ???
-eval_episodes: 10
-eval_freq: 50000
+checkpoint: None
+experiment_name: None
+
+eval_episodes: 1
+eval_freq: 30000
+
+from_scratch: false
 
 # training
-steps: 10_000_000
+steps: 1_000_000
 batch_size: 256
 reward_coef: 0.1
 value_coef: 0.1
@@ -25,8 +33,9 @@ discount_denom: 5
 discount_min: 0.95
 discount_max: 0.995
 buffer_size: 1_000_000
-exp_name: default
+exp_name: tdmpc
 data_dir: ???
+save_freq: 10_000
 
 # planning
 mpc: true
@@ -62,8 +71,8 @@ dropout: 0.01
 simnorm_dim: 8
 
 # logging
-wandb_project: ???
-wandb_entity: ???
+wandb_project: humanoid-bench
+wandb_entity: robot-learning
 wandb_silent: false
 disable_wandb: true
 save_csv: true
@@ -86,3 +95,10 @@ action_dims: ???
 episode_lengths: ???
 seed_steps: ???
 bin_size: ???
+
+# humanoid envs
+policy_path: ???
+mean_path: ???
+var_path: ???
+policy_type: ???
+small_obs: ???
