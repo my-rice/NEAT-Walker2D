@@ -11,8 +11,8 @@ class AvailableEnvironments(Enum):
         return value in cls._value2member_map_
 
 class Environment:
-    def __init__(self, env_name):
-        self.env = gym.make(env_name, render_mode="human")
+    def __init__(self, env_name, mode):
+        self.env = gym.make(env_name, render_mode=mode)
         self.observation = self.env.reset()
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -21,7 +21,14 @@ class Environment:
         self.iter = 0
         self.total_action_cost = 0
         self.done = False
+        self.index=0
 
+    def set_index(self, index):
+        self.index = index
+
+    def get_index(self):
+        return self.index
+    
     def step(self, action):
         self.last_observation = self.observation
 

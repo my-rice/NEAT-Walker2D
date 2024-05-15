@@ -37,7 +37,7 @@ def plot_winner(file_winner_net, config):
 def eval_genomes(genomes, config):
     
     # Play game and get results
-    idx,genomes = zip(*genomes)
+    _,genomes = zip(*genomes)
     
     legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME)
     legged_Bio.play()
