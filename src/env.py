@@ -22,7 +22,7 @@ class AvailableEnvironments(Enum):
 
 class Environment:
     def __init__(self, env_name):
-        self.env = gym.make(env_name, render_mode="human")
+        self.env = gym.make(env_name, render_mode="rgb_array")
         self.observation = self.env.reset()
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -36,7 +36,8 @@ class Environment:
 
 
     def step(self, action):
-        self.last_observation = self.observation
+        self._last_action = action
+        self._last_observation = self.observation
 
         self.total_action_cost += self.compute_action_cost(action)
 
@@ -71,46 +72,59 @@ class Environment:
 
     def fitness(self):
         """Fitness function for the environment"""
-        alive_bonus = self.iter*self.time_step
+        # Take the wrapped environment
+        # env = self.env.unwrapped.data.xmat['torso', 'zz']
+        # # Get the data from the environment env
+
+        #id = self.env.unwrapped.model.body_name2id('torso')
+        # unwrapped = self.env.unwrapped
 
 
-        print("RIGHT self.observation[2]: ", self.observation[2], "in degrees: ", np.degrees(self.observation[2]))
-        print("LEFT self.observation[5]: ", self.observation[5], "in degrees: ", np.degrees(self.observation[5]))
-        print("HEIGHT self.observation[0]: ", self.observation[0])
-        print("UPRIGHT = angle of the torso. self.observation[1]: ", self.observation[1])
-        # compute the degree in radiant bewteen the two legs
-        stride_rad = np.absolute(self.observation[2] - self.observation[5])
-        print("Stride in radiant: ", stride_rad, "in degrees: ", np.degrees(stride_rad))
+        # torso = unwrapped.get_body_com("torso")
+        # #print("Torso: ", torso)
+        # model = self.env.unwrapped.model
+        # data = self.env.unwrapped.data
+        # xmat = data.xmat
+        # print("unwrapped: ", dir(unwrapped))
+        # print("model: ", dir(model))
+        # print("data: ", dir(data))
+        #print("Xmat: ", xmat)
 
 
-        standing = rewards.tolerance(self.observation[0],
-                                bounds=(_STAND_HEIGHT, float('inf')),
-                                margin=_STAND_HEIGHT/2)
-        upright = (1 + self.observation[1]) / 2
+        # print("dir(data): ", dir(data))
+        # print("dir(model): ", dir(model))
+        # print("names", model.names)
+        #xmat = self.env.unwrapped.data.xmat[id]
+        #print("Xmat: ", xmat)
+
+        torso_height = self.observation[0]
+        torso_velocity = self.observation[8]
+
+        angle = self.observation[1]
+        torso_upright = np.cos(angle)
+
+        #print("Torso upright: ", torso_upright,"xmat", xmat[1][8],"equal?", xmat[1][8] == torso_height)
+
+        standing = rewards.tolerance(torso_height,
+                                    bounds=(_STAND_HEIGHT, float('inf')),
+                                    margin=_STAND_HEIGHT/4)
+        upright = (1 + torso_upright) / 2
         stand_reward = (3*standing + upright) / 4
+        if self._move_speed == 0:
+            return stand_reward
+        move_reward = rewards.tolerance(torso_velocity,
+                                bounds=(self._move_speed, self._move_speed),
+                                margin=self._move_speed/2,
+                                value_at_margin=0.5,
+                                sigmoid='linear')
+        walk_std = stand_reward * (5*move_reward + 1) / 6
+        # alternate legs reward
 
-        move_reward = rewards.tolerance(self.observation[8],
-                                        bounds=(self._move_speed, float('inf')),
-                                        margin=self._move_speed/2,
-                                        value_at_margin=0.5,
-                                        sigmoid='linear')
-        reward = stand_reward * (5*move_reward + 1) / 6
+        # Get all the control values and calculate the action cost
+        action_cost = 0
+        for i in range(6):
+            action_cost += self._last_action[i]**2
+        action_cost = 1 - action_cost/6
 
-        # stride = rewards.tolerance( # Falcata per la funzione di fitness
-        #     stride_rad,
-        #     bounds=(0.5, 0.6), # TODO: CAPIRE COME FUNZIONANO I BOUNDS. 0.5 radiant = 28.65 degrees, 0.6 radiant = 34.38 degrees
-        #     sigmoid="gaussian",
-        #     margin=0.2, # 0.2 radiant = 11.46 degrees 
-        #     #value_at_margin=0,
-        # )
-        
-
-        #speed = np.absolute(self.observation[8]) # Nella documentazione di Walker2d è indicato come la velocità, se questo è vero non serve memorizzare l'ultima osservazione
-        control_cost = self.total_action_cost 
-
-        fitness = move_reward + stand_reward 
-
-        #fitness = alive_bonus+speed+control_cost
-        #print("alive_bonus: ", alive_bonus, "speed: ", speed, "control_cost: ", control_cost, "fitness: ", fitness)
-        print("move_reward: ", move_reward, "stand_reward: ", stand_reward, "fitness: ", fitness)
+        fitness = walk_std*action_cost 
         return fitness
