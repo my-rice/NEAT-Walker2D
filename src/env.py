@@ -1,6 +1,7 @@
 import gymnasium as gym
 from enum import Enum
 import numpy as np
+from dm_control.utils import rewards
 # class syntax
 class AvailableEnvironments(Enum):
     Walker2d = "Walker2d-v4"
@@ -13,14 +14,15 @@ class AvailableEnvironments(Enum):
 class Environment:
     def __init__(self, env_name, mode):
         self.env = gym.make(env_name, render_mode=mode)
+        self.env._max_episode_steps = 20000
         self.observation = self.env.reset()
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
         self.time_step = self.env.unwrapped.dt
-        print("Time step: ", self.time_step)
         self.iter = 0
         self.total_action_cost = 0
         self.done = False
+        self.reward = 0
         self.index=0
 
     def set_index(self, index):
@@ -34,14 +36,14 @@ class Environment:
 
         self.total_action_cost += self.compute_action_cost(action)
 
-        self.observation, reward, terminated, truncated, info  = self.env.step(action)
+        self.observation, self.reward, terminated, truncated, info  = self.env.step(action)
         self.done = terminated or truncated
         if not self.done:
             self.iter += 1 
-        return self.observation, reward, self.done, info
+        return self.observation, self.reward, self.done, info
 
     def reset(self):
-        self.observation = self.env.reset()
+        self.observation = self.env.reset()[0] # this is needed because the first observation return by the reset method is different (in shape) compared to the one returned by the step method
         self.iter = 0
         return self.observation
 
@@ -64,14 +66,34 @@ class Environment:
         return np.linalg.norm(action)
 
     def fitness(self):
-        """Fitness function for the environment"""
-        alive_bonus = self.iter*self.time_step
+        standing = rewards.tolerance(self.observation[0],
+                                    bounds=(1.2, float('inf')),
+                                    margin=1.2/4)
+        # upright = (1 + physics.torso_upright()) / 2
+        stand_reward = standing
+        # if self._move_speed == 0:
+        move_reward = rewards.tolerance(self.observation[8],
+                                bounds=(1.0, 1.0),
+                                margin=1.0/2,
+                                value_at_margin=0.5,
+                                sigmoid='linear')
+        walk_std = stand_reward * (5*move_reward + 1) / 6
+        # alternate legs reward
 
-        # compute the distance from the last observation
-        #distance = np.linalg.norm(self.observation[8] - self.last_observation[8])
-        #speed = distance/self.time_step
-        speed = np.absolute(self.observation[8]) # Nella documentazione di Walker2d è indicato come la velocità, se questo è vero non serve memorizzare l'ultima osservazione
-        control_cost = self.total_action_cost 
-        fitness = alive_bonus+speed+control_cost
-        print("alive_bonus: ", alive_bonus, "speed: ", speed, "control_cost: ", control_cost, "fitness: ", fitness)
-        return fitness
+        # left_leg = physics.named.data.xpos['left_leg', 'x']
+        # right_leg = physics.named.data.xpos['right_leg', 'x']
+
+        # #print("left_leg:",left_leg,"right_leg:",right_leg)
+        # alternate_legs = 0
+        # if self.left_dominant:
+        #     if left_leg > right_leg + 0.1:
+        #         alternate_legs = 1
+        #         # Set the dominance for the next step
+        #         self.left_dominant = False
+        # else:
+        #     if right_leg > left_leg+ 0.1:
+        #         alternate_legs = 1
+        #         # Set the dominance for the next step
+        #         self.left_dominant = True
+
+        return self.reward

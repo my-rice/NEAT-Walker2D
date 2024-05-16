@@ -19,9 +19,10 @@ class LeggedRobot(Agent):
         self.neural_network = neat.nn.FeedForwardNetwork.create(genome,config)
         self.observation_space_dim = observation_space_dim
         self.action_space_dim = action_space_dim     
-        print("Observation space dim: ", self.observation_space_dim) 
-        print("Action space dim: ", self.action_space_dim)   
-    
+
+    def get_genome(self):
+        return self.genome
+
     def compute_action(self, observation):
         # Compute the action based on the network 
         input = observation

@@ -20,7 +20,6 @@ def evolutionary_driver(n, neat_config):
 
     # Add a stdout reporter to show progress in the terminal.
     p.add_reporter(neat.StdOutReporter(True))
-
     # Run until we achive n.
     winner = p.run(eval_genomes, n=n) 
 
@@ -38,21 +37,21 @@ def eval_genomes(genomes, config):
     
     # Play game and get results
     _,genomes = zip(*genomes)
-    
     legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME)
     legged_Bio.play()
     results = legged_Bio.crash_info
     
     # Calculate fitness and top score
     top_score = 0
-    for result, genomes in results:
-
-        score = 3
-        distance = 2
-        energy = 1
-
-        fitness = score*3000 + 0.2*distance - energy*1.5
-        genomes.fitness = -1 if fitness == 0 else fitness
+    for result in results:
+        genome = result[0]
+        fitness = result[1]
+        genome.fitness = fitness
+        if fitness > top_score:
+            top_score = fitness
+    for idx,genome in enumerate(genomes):
+        if genome.fitness == None:
+            print(idx)  
         
 
     # print score
