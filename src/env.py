@@ -14,7 +14,7 @@ class AvailableEnvironments(Enum):
 class Environment:
     def __init__(self, env_name, mode):
         self.env = gym.make(env_name, render_mode=mode)
-        self.env._max_episode_steps = 20000
+        self.env._max_episode_steps = 2000
         self.observation = self.env.reset()
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -24,6 +24,7 @@ class Environment:
         self.done = False
         self.reward = 0
         self.index=0
+        self.total_fitness=0
 
     def set_index(self, index):
         self.index = index
@@ -65,6 +66,9 @@ class Environment:
     def compute_action_cost(self, action):
         return np.linalg.norm(action)
 
+    def get_total_fitness(self):
+        return self.total_fitness
+    
     def fitness(self):
         standing = rewards.tolerance(self.observation[0],
                                     bounds=(1.2, float('inf')),
@@ -95,5 +99,6 @@ class Environment:
         #         alternate_legs = 1
         #         # Set the dominance for the next step
         #         self.left_dominant = True
-
+        fitness=stand_reward
+        self.total_fitness+=fitness
         return self.reward
