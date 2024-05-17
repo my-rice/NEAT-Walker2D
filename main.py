@@ -5,10 +5,10 @@ from omegaconf import MISSING, OmegaConf
 import neat
 import pickle
 from src.legged_robot_app import LeggedRobotApp
-
+import time
 ENV_NAME = None
 AGENT_NAME = None
-
+START_TIME = None
 def evolutionary_driver(n, neat_config):
     # Load configuration.
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -25,7 +25,7 @@ def evolutionary_driver(n, neat_config):
 
     # dump
     pickle.dump(winner, open('winner.pkl', 'wb'))
-
+    print(time.time()*1000-START_TIME)
     plot_winner(file_winner_net='winner.pkl', config=config)
 
 def plot_winner(file_winner_net, config):
@@ -34,32 +34,30 @@ def plot_winner(file_winner_net, config):
     print('\nBest genome:\n{!s}'.format(winner))
 
 def eval_genomes(genomes, config):
-    
+    genomes_dict = {}
+    for tuple in genomes:
+        key=tuple[0]
+        genome=tuple[1]
+        genomes_dict[key]=genome
     # Play game and get results
     _,genomes = zip(*genomes)
+    
     legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME)
     legged_Bio.play()
     results = legged_Bio.crash_info
-    
-    # Calculate fitness and top score
     top_score = 0
-    for result in results:
-        genome = result[0]
-        fitness = result[1]
-        genome.fitness = fitness
-        if fitness > top_score:
-            top_score = fitness
-    for idx,genome in enumerate(genomes):
-        if genome.fitness == None:
-            print(idx)  
+    for key,fitness in results.items():
+        genomes_dict[key].fitness=fitness
         
-
+        
+    
     # print score
     print('The top score was:', top_score)
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):
-    global ENV_NAME, AGENT_NAME
+    global ENV_NAME, AGENT_NAME, START_TIME
+    START_TIME = time.time()*1000
     missing_keys: set[str] = OmegaConf.missing_keys(cfg)
     if missing_keys:
         raise RuntimeError(f"Got missing keys in config:\n{missing_keys}")

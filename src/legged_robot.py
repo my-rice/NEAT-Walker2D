@@ -28,6 +28,7 @@ class LeggedRobot(Agent):
         input = observation
         output = self.neural_network.activate(input)
         # compute a random action for now
+        #output = np.random.rand(self.action_space_dim)
         return output
 
     def update_agent(self, fitness: float) -> None:
