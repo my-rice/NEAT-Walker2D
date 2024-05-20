@@ -1,8 +1,17 @@
 import gymnasium as gym
 from enum import Enum
 import numpy as np
+
+
 from dm_control.utils import rewards
-# class syntax
+
+
+# Minimal height of torso over foot above which stand reward is 1.
+_STAND_HEIGHT = 1.2
+
+# Horizontal speeds (meters/second) above which move reward is 1.
+_WALK_SPEED = 1
+
 class AvailableEnvironments(Enum):
     Walker2d = "Walker2d-v4"
     Walker2dtest = "Walker2d-v5"
@@ -14,36 +23,30 @@ class AvailableEnvironments(Enum):
 class Environment:
     def __init__(self, env_name, mode):
         self.env = gym.make(env_name, render_mode=mode)
-        self.env._max_episode_steps = 20000
         self.observation = self.env.reset()
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
-        self.time_step = self.env.unwrapped.dt
         self.iter = 0
         self.total_action_cost = 0
         self.done = False
-        self.reward = 0
-        self.index=0
 
-    def set_index(self, index):
-        self.index = index
+        self._move_speed = _WALK_SPEED
 
-    def get_index(self):
-        return self.index
-    
+
     def step(self, action):
-        self.last_observation = self.observation
+        self._last_action = action
+        self._last_observation = self.observation
 
         self.total_action_cost += self.compute_action_cost(action)
 
-        self.observation, self.reward, terminated, truncated, info  = self.env.step(action)
+        self.observation, reward, terminated, truncated, info  = self.env.step(action)
         self.done = terminated or truncated
         if not self.done:
             self.iter += 1 
-        return self.observation, self.reward, self.done, info
+        return self.observation, reward, self.done, info
 
     def reset(self):
-        self.observation = self.env.reset()[0] # this is needed because the first observation return by the reset method is different (in shape) compared to the one returned by the step method
+        self.observation = self.env.reset()[0]
         self.iter = 0
         return self.observation
 
@@ -66,34 +69,60 @@ class Environment:
         return np.linalg.norm(action)
 
     def fitness(self):
-        standing = rewards.tolerance(self.observation[0],
-                                    bounds=(1.2, float('inf')),
-                                    margin=1.2/4)
-        # upright = (1 + physics.torso_upright()) / 2
-        stand_reward = standing
-        # if self._move_speed == 0:
-        move_reward = rewards.tolerance(self.observation[8],
-                                bounds=(1.0, 1.0),
-                                margin=1.0/2,
+        """Fitness function for the environment"""
+        # Take the wrapped environment
+        # env = self.env.unwrapped.data.xmat['torso', 'zz']
+        # # Get the data from the environment env
+
+        #id = self.env.unwrapped.model.body_name2id('torso')
+        # unwrapped = self.env.unwrapped
+
+
+        # torso = unwrapped.get_body_com("torso")
+        # #print("Torso: ", torso)
+        # model = self.env.unwrapped.model
+        # data = self.env.unwrapped.data
+        # xmat = data.xmat
+        # print("unwrapped: ", dir(unwrapped))
+        # print("model: ", dir(model))
+        # print("data: ", dir(data))
+        #print("Xmat: ", xmat)
+
+
+        # print("dir(data): ", dir(data))
+        # print("dir(model): ", dir(model))
+        # print("names", model.names)
+        #xmat = self.env.unwrapped.data.xmat[id]
+        #print("Xmat: ", xmat)
+
+        torso_height = self.observation[0]
+        torso_velocity = self.observation[8]
+
+        angle = self.observation[1]
+        torso_upright = np.cos(angle)
+
+        #print("Torso upright: ", torso_upright,"xmat", xmat[1][8],"equal?", xmat[1][8] == torso_height)
+
+        standing = rewards.tolerance(torso_height,
+                                    bounds=(_STAND_HEIGHT, float('inf')),
+                                    margin=_STAND_HEIGHT/4)
+        upright = (1 + torso_upright) / 2
+        stand_reward = (3*standing + upright) / 4
+        if self._move_speed == 0:
+            return stand_reward
+        move_reward = rewards.tolerance(torso_velocity,
+                                bounds=(self._move_speed, self._move_speed),
+                                margin=self._move_speed/2,
                                 value_at_margin=0.5,
                                 sigmoid='linear')
         walk_std = stand_reward * (5*move_reward + 1) / 6
         # alternate legs reward
 
-        # left_leg = physics.named.data.xpos['left_leg', 'x']
-        # right_leg = physics.named.data.xpos['right_leg', 'x']
+        # Get all the control values and calculate the action cost
+        action_cost = 0
+        for i in range(6):
+            action_cost += self._last_action[i]**2
+        action_cost = 1 - action_cost/6
 
-        # #print("left_leg:",left_leg,"right_leg:",right_leg)
-        # alternate_legs = 0
-        # if self.left_dominant:
-        #     if left_leg > right_leg + 0.1:
-        #         alternate_legs = 1
-        #         # Set the dominance for the next step
-        #         self.left_dominant = False
-        # else:
-        #     if right_leg > left_leg+ 0.1:
-        #         alternate_legs = 1
-        #         # Set the dominance for the next step
-        #         self.left_dominant = True
-
-        return self.reward
+        fitness = walk_std*action_cost 
+        return fitness

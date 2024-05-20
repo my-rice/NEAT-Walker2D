@@ -9,8 +9,7 @@ from src.env import Environment, AvailableEnvironments
 
 class LeggedRobotApp(object):
 
-    def __init__(self, genomes, config, env_name="Walker2d-v4", agent_name="LeggedRobot"):
-        print(env_name)
+    def __init__(self, genomes, config, env_name="Walker2d-v4", agent_name="LeggedRobot", render=False):
         self.experiments = []
         self.start=0
         self.score = 0
@@ -19,10 +18,12 @@ class LeggedRobotApp(object):
         for index, genome in enumerate(genomes):
             env=None
             if(index==len(genomes)-1):
-                env=Environment(env_name, "human")
+                if(render):
+                    env=Environment(env_name, "human")
+                else:
+                    env=Environment(env_name, "rgb_array")
             else:
                 env=Environment(env_name, "rgb_array")
-            env.set_index(index)
             env.reset()
             legged_robot = LeggedRobot(env.observation_space.shape[0],env.action_space.shape[0],genome,config)
             self.experiments.append([env,legged_robot,0.0])
@@ -48,7 +49,6 @@ class LeggedRobotApp(object):
                 #print("The environment", env.get_index(), "has been removed")
                 env.close()
                 if(len(self.experiments)==0):
-                    print("All the environments are dead")
                     return True
             
         self.start=self.start+1

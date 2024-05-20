@@ -3,30 +3,16 @@ from src.legged_robot import LeggedRobot, AvailableAgents
 import hydra
 from omegaconf import MISSING, OmegaConf
 import neat
+from src.population_wrapper import PopulationWrapper
 import pickle
 from src.legged_robot_app import LeggedRobotApp
+from mpi4py import MPI
+import time
+
 
 ENV_NAME = None
 AGENT_NAME = None
 
-def evolutionary_driver(n, neat_config):
-    # Load configuration.
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                         neat_config)
-
-    # Create the population, which is the top-level object for a NEAT run.
-    p = neat.Population(config)
-
-    # Add a stdout reporter to show progress in the terminal.
-    p.add_reporter(neat.StdOutReporter(True))
-    # Run until we achive n.
-    winner = p.run(eval_genomes, n=n) 
-
-    # dump
-    pickle.dump(winner, open('winner.pkl', 'wb'))
-
-    plot_winner(file_winner_net='winner.pkl', config=config)
 
 def plot_winner(file_winner_net, config):
     with open(file_winner_net, 'rb') as f:
@@ -55,7 +41,62 @@ def eval_genomes(genomes, config):
         
 
     # print score
-    print('The top score was:', top_score)
+    #print('The top score was:', top_score)
+
+# def master_loop(migration_steps, bests_to_migrate, comm, size):
+
+
+#     comm.bcast(bests_to_migrate, root=0)# send to slaves number of bests to migrate
+
+#     # wait for slaves to finish and receive bests
+#     for i in range(1, size):
+#         data = comm.recv(source=i, tag=1)
+#         if(i==1):
+#             print(f"Master received data from slave {i}: {data}")
+#     # migration convention
+#     # send to slaves migrated bests or stop them
+#     # at then end of the entire loop, save the best and kill the remaining slaves
+#     pass
+
+def slave_loop(migration_steps,comm,n, neat_config):
+    # wait for master to start with the number of information (one of them is the number of bests to migrate)
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         neat_config)
+
+    # Create the population, which is the top-level object for a NEAT run.
+    p = PopulationWrapper(config)
+    # Add a stdout reporter to show progress in the terminal.
+    # p.add_reporter(neat.StdOutReporter(True))
+    # Run until we achive n.
+    count_migrations = 0
+    while count_migrations < migration_steps:
+        if(rank==0):
+            print("I am rank ", rank, " and I am in generation ", p.get_generation())
+    # winner = p.run(eval_genomes, n=n) 
+        best = p.run_mpi(eval_genomes, n=n, rank=rank)
+        next = (rank +1)%size
+        prev = (rank -1)%size
+        if(rank == 0):
+            prev = size-1
+        if(count_migrations==migration_steps-1):
+            try:
+                pickle.dump(best, open("winner"+str(rank)+".pkl", "wb"))
+                print("I am rank ", rank, " and I AM DONE, best fitness is ", best.fitness)
+            except:
+                print("I am rank ", rank, " and I AM BLOCKED, previous rank is ", prev, " and next rank is ", next, "size is ", size, " and count_migrations is ", count_migrations)
+            break
+        req = comm.isend(best, dest=next, tag=1)
+        bests_received = comm.recv(source=prev, tag=1)
+        p.replace_n_noobs(bests_received)
+        count_migrations+=1
+        # sync receive from master what to do next
+        # if stop, break
+        # if continue, change population and continue loop
+
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):
@@ -69,9 +110,16 @@ def main(cfg):
     assert AvailableEnvironments.has_value(cfg.env_name)
     assert AvailableAgents.has_value(cfg.agent_name)
     assert cfg.neat_config is not None
+    assert cfg.migration_steps > 0
     ENV_NAME = cfg.env_name
     AGENT_NAME = cfg.agent_name
-    evolutionary_driver( n=cfg.generations, neat_config=cfg.neat_config) # check if is a real config
+
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+  
+    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config) # check if is a real config
 
 if __name__ == "__main__":
     main()
