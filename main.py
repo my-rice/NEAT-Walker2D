@@ -36,23 +36,24 @@ def plot_winner(file_winner_net, config):
 def eval_genomes(genomes, config):
     genomes_dict = {}
     for tuple in genomes:
-        key=tuple[0]
-        genome=tuple[1]
-        genomes_dict[key]=genome
+        key = tuple[0]
+        genome = tuple[1]
+        genomes_dict[key] = genome
     # Play game and get results
-    _,genomes = zip(*genomes)
-    
+    _, genomes = zip(*genomes)
+
+    start_time = time.time()
     legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME)
-    legged_Bio.play()
+    
     results = legged_Bio.crash_info
     top_score = 0
-    for key,fitness in results.items():
-        genomes_dict[key].fitness=fitness
-        
-        
+    for key, fitness in results.items():
+        genomes_dict[key].fitness = fitness
+        if fitness > top_score:
+            top_score = fitness
+
+
     
-    # print score
-    print('The top score was:', top_score)
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):

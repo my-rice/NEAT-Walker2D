@@ -71,36 +71,42 @@ class LeggedRobotApp(object):
         self.robots = []
         self.observation_space=0
         self.action_space=0
-        self.subproc = self.make_mp_envs(env_name,len(genomes),genomes,config)
+        start_time = time.time()
+        self.subproc = self.make_mp_envs(env_name, len(genomes), genomes, config)
+        end_time = time.time()
+        execution_time = end_time - start_time
+        print("Execution time subprocessing:", execution_time, "seconds")
+        self.on_loop()
         # for index, genome in enumerate(genomes):
         #     legged_robot = LeggedRobot(self.observation_space,self.action_space,genome,config)
 
-    def make_mp_envs(self, env_name, num_env,genomes,config):
-        def make_env(genome,config,i):
+    def make_mp_envs(self, env_name, num_env, genomes, config):
+        def make_env(genome, config, i):
             def fn():
-                mode="rgb_array"
-                if(i==0):
-                    mode="human"
-                env=Environment(env_name, mode)
-                legged_robot = LeggedRobot(env.get_observation_space,env.get_action_space,genome,config)
-
-
-
-                return env,legged_robot
-            return fn
-        return SubprocVecEnv([make_env(genomes[i],config,i) for i in range (num_env)])
+                mode = "rgb_array"
+                if i == 0:
+                    mode = "rgb_array"
+                env = Environment(env_name, mode)
+                legged_robot = LeggedRobot(env.get_observation_space, env.get_action_space, genome, config)
+                end_time = time.time()
+                return env, legged_robot
+            return fn()
+        
+        envs = []
+        start = time.time()
+        for i in range(num_env):
+            envs.append(make_env(genomes[i], config, i))
+        end = time.time()
+        print("Execution time inside make_mp_envs:", end - start, "seconds")
+        
+        return SubprocVecEnv(envs)
 
     def set_fitness(self, fitness, index):
         self.experiments[index][2] = fitness
 
     def on_loop(self):
-        try:
-            obs,rews,done,infos=self.subproc.step()
-        except AllDeadEnvsException as e:
-            self.crash_info=self.subproc.return_wills()
-            return True
-        return False
-       
+            self.crash_info = self.subproc.start()
+            return True       
 
         # for count, experiment in enumerate(self.experiments):
         #     env = experiment[0]
@@ -124,13 +130,7 @@ class LeggedRobotApp(object):
         # self.start=self.start+1
                         
 
-    
-    def play(self):    
-        self.start=0
-        while True:
-            if self.on_loop():
-                return
-    
+  
 
 
 
