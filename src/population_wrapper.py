@@ -11,15 +11,11 @@ class CompleteExtinctionException(Exception):
 class PopulationWrapper(Population):
     def __init__(self, config, initial_state=None):
         super().__init__(config, initial_state)
-        #take a random fitness value
-        # self.population_ranking = []  # TODO IF WE HAVE TIME
+        self.population_ranking = []  
         # for g in itervalues(self.population):
         #     fitness = random.randint(0, 100)
         #     self.population_ranking.append((fitness, g.key))
         # heapq.heapify(self.population_ranking)
-        # for g in itervalues(self.population):
-        #     print(heapq.heappop(self.population_ranking))
-        # time.sleep(1000)
         self.worst_genome=None
         
     def get_population(self):
@@ -30,10 +26,17 @@ class PopulationWrapper(Population):
     
     def replace_n_noobs(self, genome_to_replace): # NOTE: we assume that population dict key is the genome id
         # change ID of the best genomes
-        genome_to_replace.key = self.worst_genome.key
-        self.population[genome_to_replace.key] = genome_to_replace
+        for g in itervalues(self.population):
+            self.population_ranking.append((g.fitness, g.key))
 
-        pass
+        heapq.heapify(self.population_ranking)
+        worst_genomes = []
+        for i in range(0, len(genome_to_replace)):
+            worst_genomes.append(heapq.heappop(self.population_ranking))
+        for i in range(0, len(genome_to_replace)):
+            genome_to_replace[i].key = worst_genomes[i][1]
+            self.population[genome_to_replace[i].key] = genome_to_replace[i]
+        self.population_ranking = []
         
     def run_mpi(self, fitness_function, n=None, rank=None):
         
@@ -51,31 +54,29 @@ class PopulationWrapper(Population):
 
             # Gather and report statistics.
             best = None
-            worst = None
             for g in itervalues(self.population):
                 if best is None or g.fitness > best.fitness:
                     best = g
-                if worst is None or g.fitness < worst.fitness:
-                    worst = g
             self.reporters.post_evaluate(self.config, self.population, self.species, best)
 
             # Track the best genome ever seen.
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
-            if self.worst_genome is None or worst.fitness < self.worst_genome.fitness:
-                self.worst_genome = worst
-
+            
+            
+                
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
                 fv = self.fitness_criterion(g.fitness for g in itervalues(self.population))
                 if fv >= self.config.fitness_threshold:
                     self.reporters.found_solution(self.config, self.generation, best)
                     break
-
             # Create the next generation from the current generation.
-            self.population = self.reproduction.reproduce(self.config, self.species,
+            if(k!=n):
+                self.population = self.reproduction.reproduce(self.config, self.species,
                                                           self.config.pop_size, self.generation)
 
+          
             # Check for complete extinction.
             if not self.species.species:
                 self.reporters.complete_extinction()
@@ -88,15 +89,17 @@ class PopulationWrapper(Population):
                                                                    self.config.pop_size)
                 else:
                     raise CompleteExtinctionException()
-
+            
             # Divide the new population into species.
             self.species.speciate(self.config, self.population, self.generation)
 
+            
             self.reporters.end_generation(self.config, self.population, self.species)
 
             self.generation += 1
 
         if self.config.no_fitness_termination:
             self.reporters.found_solution(self.config, self.generation, self.best_genome)
+
 
         return self.best_genome
