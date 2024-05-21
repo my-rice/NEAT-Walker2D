@@ -9,7 +9,7 @@ from src.env import Environment, AvailableEnvironments
 
 class LeggedRobotApp(object):
 
-    def __init__(self, genomes, config, env_name="Walker2d-v4", agent_name="LeggedRobot", render=False):
+    def __init__(self, genomes, config, env_name="Walker2d-v4", agent_name="LeggedRobot", render=False, seed=None):
         self.experiments = []
         self.start=0
         self.score = 0
@@ -19,11 +19,11 @@ class LeggedRobotApp(object):
             env=None
             if(index==len(genomes)-1):
                 if(render):
-                    env=Environment(env_name, "human")
+                    env=Environment(env_name, "human", seed=seed)
                 else:
-                    env=Environment(env_name, "rgb_array")
+                    env=Environment(env_name, "rgb_array", seed=seed)
             else:
-                env=Environment(env_name, "rgb_array")
+                env=Environment(env_name, "rgb_array", seed=seed)
             env.reset()
             legged_robot = LeggedRobot(env.observation_space.shape[0],env.action_space.shape[0],genome,config)
             self.experiments.append([env,legged_robot,0.0])

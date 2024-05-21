@@ -11,6 +11,7 @@ from mpi4py import MPI
 import time
 import numpy as np
 import math
+import random
 ENV_NAME = None
 AGENT_NAME = None
 
@@ -20,11 +21,11 @@ def plot_winner(file_winner_net, config):
         winner = pickle.load(f)
     print('\nBest genome:\n{!s}'.format(winner))
 
-def eval_genomes(genomes, config):
+def eval_genomes(genomes, config, seed):
     
     # Play game and get results
     _,genomes = zip(*genomes)
-    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME)
+    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME, seed=seed)
     legged_Bio.play()
     results = legged_Bio.crash_info
     
@@ -63,6 +64,9 @@ def slave_loop(migration_steps,comm,n, neat_config,seed):
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
     size = comm.Get_size()
+    seed=seed+rank
+    np.random.seed(seed)
+    random.seed(seed)
     dims = [math.sqrt(size), math.sqrt(size)]
     periods = [True, True]  
     reorder = True 
@@ -84,7 +88,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed):
     while count_migrations < migration_steps:
         north, south = cart_comm.Shift(0, 1)
         west, east = cart_comm.Shift(1, 1)
-        best = p.run_mpi(eval_genomes, n=n, rank=rank)
+        best = p.run_mpi(eval_genomes, n=n, rank=rank, seed=seed)
         if(rank==0):
             print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
         
