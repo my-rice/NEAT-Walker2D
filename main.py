@@ -1,3 +1,4 @@
+import neat.genome
 from src.env import Environment, AvailableEnvironments
 from src.legged_robot import LeggedRobot, AvailableAgents
 import hydra
@@ -8,8 +9,8 @@ import pickle
 from src.legged_robot_app import LeggedRobotApp
 from mpi4py import MPI
 import time
-
-
+import numpy as np
+import math
 ENV_NAME = None
 AGENT_NAME = None
 
@@ -58,10 +59,17 @@ def eval_genomes(genomes, config):
 #     # at then end of the entire loop, save the best and kill the remaining slaves
 #     pass
 
-def slave_loop(migration_steps,comm,n, neat_config):
+def slave_loop(migration_steps,comm,n, neat_config,seed):
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
     size = comm.Get_size()
+    dims = [math.sqrt(size), math.sqrt(size)]
+    periods = [True, True]  
+    reorder = True 
+    cart_comm = comm.Create_cart(dims, periods=periods, reorder=reorder)
+    coords = cart_comm.Get_coords(rank)
+    
+
 
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
@@ -74,24 +82,42 @@ def slave_loop(migration_steps,comm,n, neat_config):
     # Run until we achive n.
     count_migrations = 0
     while count_migrations < migration_steps:
-        if(rank==0):
-            print("I am rank ", rank, " and I am in generation ", p.get_generation())
-    # winner = p.run(eval_genomes, n=n) 
+        north, south = cart_comm.Shift(0, 1)
+        west, east = cart_comm.Shift(1, 1)
         best = p.run_mpi(eval_genomes, n=n, rank=rank)
-        next = (rank +1)%size
-        prev = (rank -1)%size
-        if(rank == 0):
-            prev = size-1
+        if(rank==0):
+            print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
+        
         if(count_migrations==migration_steps-1):
             try:
                 pickle.dump(best, open("winner"+str(rank)+".pkl", "wb"))
                 print("I am rank ", rank, " and I AM DONE, best fitness is ", best.fitness)
             except:
-                print("I am rank ", rank, " and I AM BLOCKED, previous rank is ", prev, " and next rank is ", next, "size is ", size, " and count_migrations is ", count_migrations)
+                print("I am rank ", rank, " and I AM BLOCKED size is ", size, " and count_migrations is ", count_migrations)
             break
-        req = comm.isend(best, dest=next, tag=1)
-        bests_received = comm.recv(source=prev, tag=1)
-        p.replace_n_noobs(bests_received)
+        if(count_migrations==migration_steps-2):
+            comm.bcast(best, root=rank)
+            recv_data = []
+            for i in range(1, size):
+                if i != rank:
+                    best_received=comm.bcast(None,root=i)
+                    recv_data.append(best_received)
+            p.replace_n_noobs(recv_data)
+           
+        else:
+            neighbors = [north, south, west, east]
+            for neighbor in neighbors:
+                if neighbor != MPI.PROC_NULL:
+                    comm.isend(best, dest=neighbor, tag=1)
+            recv_data = []
+            for neighbor in neighbors:
+                if neighbor != MPI.PROC_NULL:
+                    best_received = comm.recv(source=neighbor, tag=1)
+                    recv_data.append(best_received)
+            p.replace_n_noobs(recv_data)
+
+
+
         count_migrations+=1
         # sync receive from master what to do next
         # if stop, break
@@ -111,6 +137,7 @@ def main(cfg):
     assert AvailableAgents.has_value(cfg.agent_name)
     assert cfg.neat_config is not None
     assert cfg.migration_steps > 0
+    assert cfg.seed is not None
     ENV_NAME = cfg.env_name
     AGENT_NAME = cfg.agent_name
 
@@ -119,7 +146,7 @@ def main(cfg):
     size = comm.Get_size()
 
   
-    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config) # check if is a real config
+    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed) # check if is a real config
 
 if __name__ == "__main__":
     main()
