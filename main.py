@@ -11,6 +11,7 @@ from mpi4py import MPI
 import time
 import numpy as np
 import math
+from logger import Logger
 ENV_NAME = None
 AGENT_NAME = None
 
@@ -59,7 +60,7 @@ def eval_genomes(genomes, config):
 #     # at then end of the entire loop, save the best and kill the remaining slaves
 #     pass
 
-def slave_loop(migration_steps,comm,n, neat_config,seed):
+def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -84,7 +85,8 @@ def slave_loop(migration_steps,comm,n, neat_config,seed):
     while count_migrations < migration_steps:
         north, south = cart_comm.Shift(0, 1)
         west, east = cart_comm.Shift(1, 1)
-        best = p.run_mpi(eval_genomes, n=n, rank=rank)
+        best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations)
+
         if(rank==0):
             print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
         
@@ -145,8 +147,10 @@ def main(cfg):
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-  
-    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed) # check if is a real config
-
+    logger = Logger(cfg,rank=rank,comm=comm)
+    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger) # check if is a real config
+    
+    logger.save_results(rank=rank)
+    
 if __name__ == "__main__":
     main()
