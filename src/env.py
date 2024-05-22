@@ -1,7 +1,7 @@
 import gymnasium as gym
 from enum import Enum
 import numpy as np
-
+import random
 
 from dm_control.utils import rewards
 
@@ -21,9 +21,12 @@ class AvailableEnvironments(Enum):
         return value in cls._value2member_map_
 
 class Environment:
-    def __init__(self, env_name, mode):
+    def __init__(self, env_name, mode, seed=None):
+        if(seed is not None):
+            np.random.seed(seed)
+            random.seed(seed)
         self.env = gym.make(env_name, render_mode=mode)
-        self.observation = self.env.reset()
+        self.observation = self.reset(seed=seed)
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
         self.iter = 0
@@ -45,8 +48,11 @@ class Environment:
             self.iter += 1 
         return self.observation, reward, self.done, info
 
-    def reset(self):
-        self.observation = self.env.reset()[0]
+    def reset(self, seed=None):
+        if(seed!=None):
+            self.observation = self.env.reset(seed=seed)[0]
+        else:
+            self.observation = self.env.reset()[0]
         self.iter = 0
         return self.observation
 

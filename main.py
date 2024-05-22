@@ -21,11 +21,11 @@ def plot_winner(file_winner_net, config):
         winner = pickle.load(f)
     print('\nBest genome:\n{!s}'.format(winner))
 
-def eval_genomes(genomes, config):
+def eval_genomes(genomes, config, seed):
     
     # Play game and get results
     _,genomes = zip(*genomes)
-    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME)
+    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME, seed=seed)
     legged_Bio.play()
     results = legged_Bio.crash_info
     
@@ -64,6 +64,9 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
     size = comm.Get_size()
+    seed=seed+rank
+    np.random.seed(seed)
+    random.seed(seed)
     dims = [math.sqrt(size), math.sqrt(size)]
     periods = [True, True]  
     reorder = True 
