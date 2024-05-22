@@ -16,7 +16,6 @@ class PopulationWrapper(Population):
         #     fitness = random.randint(0, 100)
         #     self.population_ranking.append((fitness, g.key))
         # heapq.heapify(self.population_ranking)
-        self.worst_genome=None
         
     def get_population(self):
         return self.population # DA LEVARE
@@ -25,7 +24,6 @@ class PopulationWrapper(Population):
         return self.generation  
     
     def replace_n_noobs(self, genome_to_replace): # NOTE: we assume that population dict key is the genome id
-        # change ID of the best genomes
         for g in itervalues(self.population):
             self.population_ranking.append((g.fitness, g.key))
 
@@ -37,8 +35,35 @@ class PopulationWrapper(Population):
             genome_to_replace[i].key = worst_genomes[i][1]
             self.population[genome_to_replace[i].key] = genome_to_replace[i]
         self.population_ranking = []
+
+        self.population = self.reproduction.reproduce(self.config, self.species,
+                                                            self.config.pop_size, self.generation)
+           
+
+        # Check for complete extinction.
+        if not self.species.species:
+            self.reporters.complete_extinction()
+
+            # If requested by the user, create a completely new population,
+            # otherwise raise an exception.
+            if self.config.reset_on_extinction:
+                self.population = self.reproduction.create_new(self.config.genome_type,
+                                                            self.config.genome_config,
+                                                            self.config.pop_size)
+            else:
+                raise CompleteExtinctionException()
         
-    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None):
+        # Divide the new population into species.
+        self.species.speciate(self.config, self.population, self.generation)
+
+        
+        self.reporters.end_generation(self.config, self.population, self.species)
+    
+
+
+        self.generation += 1
+        
+    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None):
         
         if self.config.no_fitness_termination and (n is None):
             raise RuntimeError("Cannot have no generational limit with no fitness termination")
@@ -65,7 +90,7 @@ class PopulationWrapper(Population):
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
             
-            
+       
                 
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
@@ -74,31 +99,34 @@ class PopulationWrapper(Population):
                     self.reporters.found_solution(self.config, self.generation, best)
                     break
             # Create the next generation from the current generation.
+            
             if(k!=n):
                 self.population = self.reproduction.reproduce(self.config, self.species,
-                                                          self.config.pop_size, self.generation)
+                                                            self.config.pop_size, self.generation)
+           
+              
+                # Check for complete extinction.
+                if not self.species.species:
+                    self.reporters.complete_extinction()
 
-          
-            # Check for complete extinction.
-            if not self.species.species:
-                self.reporters.complete_extinction()
+                    # If requested by the user, create a completely new population,
+                    # otherwise raise an exception.
+                    if self.config.reset_on_extinction:
+                        self.population = self.reproduction.create_new(self.config.genome_type,
+                                                                    self.config.genome_config,
+                                                                    self.config.pop_size)
+                    else:
+                        raise CompleteExtinctionException()
+                
+                # Divide the new population into species.
+                self.species.speciate(self.config, self.population, self.generation)
 
-                # If requested by the user, create a completely new population,
-                # otherwise raise an exception.
-                if self.config.reset_on_extinction:
-                    self.population = self.reproduction.create_new(self.config.genome_type,
-                                                                   self.config.genome_config,
-                                                                   self.config.pop_size)
-                else:
-                    raise CompleteExtinctionException()
+                
+                self.reporters.end_generation(self.config, self.population, self.species)
             
-            # Divide the new population into species.
-            self.species.speciate(self.config, self.population, self.generation)
+        
 
-            
-            self.reporters.end_generation(self.config, self.population, self.species)
-
-            self.generation += 1
+                self.generation += 1
 
         if self.config.no_fitness_termination:
             self.reporters.found_solution(self.config, self.generation, self.best_genome)

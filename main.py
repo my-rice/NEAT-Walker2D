@@ -12,6 +12,7 @@ import time
 import numpy as np
 import math
 from logger import Logger
+import random
 ENV_NAME = None
 AGENT_NAME = None
 
@@ -88,7 +89,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
     while count_migrations < migration_steps:
         north, south = cart_comm.Shift(0, 1)
         west, east = cart_comm.Shift(1, 1)
-        best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations)
+        best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed)
 
         if(rank==0):
             print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
