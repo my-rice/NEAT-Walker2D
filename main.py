@@ -90,7 +90,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
         north, south = cart_comm.Shift(0, 1)
         west, east = cart_comm.Shift(1, 1)
         best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed)
-
+        pickle.dump(best, open("actual"+str(rank)+".pkl", "wb"))
         if(rank==0):
             print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
         
@@ -102,25 +102,34 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
                 print("I am rank ", rank, " and I AM BLOCKED size is ", size, " and count_migrations is ", count_migrations)
             break
         if(count_migrations==migration_steps-2):
-            comm.bcast(best, root=rank)
+            comm.bcast(rank, root=rank)
             recv_data = []
             for i in range(1, size):
                 if i != rank:
-                    best_received=comm.bcast(None,root=i)
-                    recv_data.append(best_received)
-            p.replace_n_noobs(recv_data)
+                    rank_received=comm.bcast(None,root=i)
+                    recv_data.append(rank_received)
+            recv_genomes = []
+            for neighbor in recv_data:
+                genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb'))
+                recv_genomes.append(genomes)
+            p.replace_n_noobs(recv_genomes)
            
         else:
             neighbors = [north, south, west, east]
             for neighbor in neighbors:
                 if neighbor != MPI.PROC_NULL:
-                    comm.isend(best, dest=neighbor, tag=1)
+                    comm.isend(rank, dest=neighbor, tag=1)
             recv_data = []
             for neighbor in neighbors:
                 if neighbor != MPI.PROC_NULL:
-                    best_received = comm.recv(source=neighbor, tag=1)
-                    recv_data.append(best_received)
-            p.replace_n_noobs(recv_data)
+                    rank_received = comm.recv(source=neighbor, tag=1)
+                    recv_data.append(rank_received)
+            recv_genomes = []
+            for neighbor in recv_data:
+                genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb'))
+                recv_genomes.append(genomes)
+
+            p.replace_n_noobs(recv_genomes)
 
 
 
