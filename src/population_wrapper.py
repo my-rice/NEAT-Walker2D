@@ -16,7 +16,7 @@ class PopulationWrapper(Population):
         #     fitness = random.randint(0, 100)
         #     self.population_ranking.append((fitness, g.key))
         # heapq.heapify(self.population_ranking)
-        
+        self.rank = None
     def get_population(self):
         return self.population # DA LEVARE
     
@@ -24,6 +24,8 @@ class PopulationWrapper(Population):
         return self.generation  
     
     def replace_n_noobs(self, genome_to_replace): # NOTE: we assume that population dict key is the genome id
+     
+
         for g in itervalues(self.population):
             self.population_ranking.append((g.fitness, g.key))
 
@@ -31,15 +33,27 @@ class PopulationWrapper(Population):
         worst_genomes = []
         for i in range(0, len(genome_to_replace)):
             worst_genomes.append(heapq.heappop(self.population_ranking))
+
+       
+            
+            
         for i in range(0, len(genome_to_replace)):
             genome_to_replace[i].key = worst_genomes[i][1]
             self.population[genome_to_replace[i].key] = genome_to_replace[i]
         self.population_ranking = []
+        
+        self.species.speciate(self.config, self.population, self.generation) # Reproduction iterates on species, if we don't call this method, the new genomes will not be in any species
 
-        self.population = self.reproduction.reproduce(self.config, self.species,
-                                                            self.config.pop_size, self.generation)
-           
-
+        # pollo = self.population
+        # try:
+        #     self.population = self.reproduction.reproduce(self.config, self.species,
+        #                                                     self.config.pop_size, self.generation)
+        # except:
+        #     print("ciao, sono rank ", self.rank, " e ho fallito la riproduzione")
+            
+       
+                
+        
         # Check for complete extinction.
         if not self.species.species:
             self.reporters.complete_extinction()
@@ -53,22 +67,22 @@ class PopulationWrapper(Population):
             else:
                 raise CompleteExtinctionException()
         
-        # Divide the new population into species.
-        self.species.speciate(self.config, self.population, self.generation)
+        # # Divide the new population into species.
+        # self.species.speciate(self.config, self.population, self.generation) 
 
         
         self.reporters.end_generation(self.config, self.population, self.species)
-    
-
+        
 
         self.generation += 1
         
-    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None):
         
+    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None):
+        self.rank = rank
         if self.config.no_fitness_termination and (n is None):
             raise RuntimeError("Cannot have no generational limit with no fitness termination")
         
-        k = 0
+        k=0
         while n is None or k < n:
             k += 1
             #print("I am rank ", rank, " and I am in generation ", self.generation)
@@ -90,8 +104,7 @@ class PopulationWrapper(Population):
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
             
-       
-                
+                    
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
                 fv = self.fitness_criterion(g.fitness for g in itervalues(self.population))
@@ -99,12 +112,23 @@ class PopulationWrapper(Population):
                     self.reporters.found_solution(self.config, self.generation, best)
                     break
             # Create the next generation from the current generation.
-            
+            specie_attuale = self.species.species
+
+
             if(k!=n):
-                self.population = self.reproduction.reproduce(self.config, self.species,
+                try:
+                    self.population = self.reproduction.reproduce(self.config, self.species,
                                                             self.config.pop_size, self.generation)
-           
-              
+                except Exception as e:
+                    print("I am the rank crashed: ", rank, " k is ", k, " and the exception is: ")
+                    if(rank==8):
+                        for key,value in specie_attuale.items():
+                                print(rank,"Species key:" ,value.key)
+                                for m in value.members.keys():
+                                    print(rank,"Genome:", value.members[m].key,value.members[m].fitness, m)
+
+               
+                time.sleep(1)
                 # Check for complete extinction.
                 if not self.species.species:
                     self.reporters.complete_extinction()
@@ -121,7 +145,11 @@ class PopulationWrapper(Population):
                 # Divide the new population into species.
                 self.species.speciate(self.config, self.population, self.generation)
 
-                
+                if(rank==8):
+                        for key,value in specie_attuale.items():
+                                print(rank,"Species key:" ,value.key)
+                                for m in value.members.keys():
+                                    print(rank,"Genome:", value.members[m].key,value.members[m].fitness, m)
                 self.reporters.end_generation(self.config, self.population, self.species)
             
         
