@@ -104,13 +104,13 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
         if(count_migrations==migration_steps-2):
             comm.bcast(rank, root=rank)
             recv_data = []
-            for i in range(1, size):
+            for i in range (size):
                 if i != rank:
                     rank_received=comm.bcast(None,root=i)
                     recv_data.append(rank_received)
             recv_genomes = []
             for neighbor in recv_data:
-                genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb'))
+                genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb')) # is rb so there isn't problem with mutual exclusion of files
                 recv_genomes.append(genomes)
             p.replace_n_noobs(recv_genomes)
            
