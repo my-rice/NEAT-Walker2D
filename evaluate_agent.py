@@ -11,11 +11,11 @@ def run_winner(n=1):
                          'config-neat.ini')
     
     #load Genome
-    genomes = pickle.load(open('winner6.pkl', 'rb'))
+    genomes = pickle.load(open('winner4.pkl', 'rb'))
     
     for i in range(0,n):
         # Play game and get results
-        flappy_Bio = LeggedRobotApp([genomes], config, render=True)
+        flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")
         flappy_Bio.play()
 
 def main():
