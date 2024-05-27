@@ -42,6 +42,11 @@ class PopulationWrapper(Population):
             self.population[genome_to_replace[i].key] = genome_to_replace[i]
         self.population_ranking = []
         
+        for key,value in self.species.species.items():
+            for f,k in worst_genomes:
+                if k in value.members.keys():
+                    value.members[k] = self.population[k]
+                                
         self.species.speciate(self.config, self.population, self.generation) # Reproduction iterates on species, if we don't call this method, the new genomes will not be in any species
 
         # pollo = self.population
@@ -128,7 +133,6 @@ class PopulationWrapper(Population):
                                     print(rank,"Genome:", value.members[m].key,value.members[m].fitness, m)
 
                
-                time.sleep(1)
                 # Check for complete extinction.
                 if not self.species.species:
                     self.reporters.complete_extinction()
@@ -145,14 +149,14 @@ class PopulationWrapper(Population):
                 # Divide the new population into species.
                 self.species.speciate(self.config, self.population, self.generation)
 
-                if(rank==8):
-                        for key,value in specie_attuale.items():
-                                print(rank,"Species key:" ,value.key)
-                                for m in value.members.keys():
-                                    print(rank,"Genome:", value.members[m].key,value.members[m].fitness, m)
+                
                 self.reporters.end_generation(self.config, self.population, self.species)
-            
-        
+                indicizziamo = 0
+                if(rank==8):
+                    for key,value in specie_attuale.items():
+                            for m in value.members.keys():
+                                indicizziamo = indicizziamo+1
+                    print(indicizziamo)
 
                 self.generation += 1
 
