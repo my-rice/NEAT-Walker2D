@@ -38,14 +38,34 @@ class PopulationWrapper(Population):
             
             
         for i in range(0, len(genome_to_replace)):
+            #print("type", type(genome_to_replace[i]))
             genome_to_replace[i].key = worst_genomes[i][1]
             self.population[genome_to_replace[i].key] = genome_to_replace[i]
+            #print("I am rank ", self.rank, "self.population[genome_to_replace[i].key]", dir(self.population[genome_to_replace[i].key].fitness))
+            # print("type", type(self.population))
+            # print("type 2: ", type(self.population[genome_to_replace[i].key]))
+            # print("self.population[genome_to_replace[i].key].node_indexer",self.population[genome_to_replace[i].key].node_indexer)
+            #print("self.config.genome_type.node_indexer",dir(self.config))
+            # print("self.config.genome_config",self.config.genome_config.node_indexer)
+            # os.exit(1)
+            
+            #self.config.genome_config = self.config.genome_type.parse_config(genome_dict)
+
+            
+            #self.population[genome_to_replace[i].key].node_indexer = None
+        
+        #print("self.config.genome_config.node_indexer",self.config.genome_config.node_indexer)
+        #self.config.genome_config.node_indexer = None
+        
+        self.config.genome_config.reset_node_indexer()
+        #self.config.genome_config.connection_indexer = None
         self.population_ranking = []
         
+        #print(" self.species.species.items", self.species.species.members)
         for key,value in self.species.species.items():
             for f,k in worst_genomes:
                 if k in value.members.keys():
-                    value.members[k] = self.population[k]
+                    self.species.species[key].members[k] = self.population[k]
                                 
         self.species.speciate(self.config, self.population, self.generation) # Reproduction iterates on species, if we don't call this method, the new genomes will not be in any species
 
@@ -121,16 +141,16 @@ class PopulationWrapper(Population):
 
 
             if(k!=n):
-                try:
-                    self.population = self.reproduction.reproduce(self.config, self.species,
+                #try:
+                self.population = self.reproduction.reproduce(self.config, self.species,
                                                             self.config.pop_size, self.generation)
-                except Exception as e:
-                    print("I am the rank crashed: ", rank, " k is ", k, " and the exception is: ")
-                    if(rank==8):
-                        for key,value in specie_attuale.items():
-                                print(rank,"Species key:" ,value.key)
-                                for m in value.members.keys():
-                                    print(rank,"Genome:", value.members[m].key,value.members[m].fitness, m)
+                # except Exception as e:
+                #     print("I am the rank crashed: ", rank, " k is ", k, " and the exception is: ")
+                #     if(rank==8):
+                #         for key,value in specie_attuale.items():
+                #                 print(rank,"Species key:" ,value.key)
+                #                 for m in value.members.keys():
+                #                     print(rank,"Genome:", value.members[m].key,value.members[m].fitness, m)
 
                
                 # Check for complete extinction.

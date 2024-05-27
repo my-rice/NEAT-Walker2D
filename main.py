@@ -13,6 +13,8 @@ import numpy as np
 import math
 from logger import Logger
 import random
+
+from genome_wrapper import DefaultGenomeWrapper
 ENV_NAME = None
 AGENT_NAME = None
 
@@ -76,7 +78,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
     
 
 
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+    config = neat.Config(DefaultGenomeWrapper, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          neat_config)
 
