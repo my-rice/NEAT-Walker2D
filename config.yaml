@@ -1,4 +1,4 @@
-env_name: Walker2d-v4
+env_name: Walker2d-v5
 agent_name: LeggedRobot
 experiment_name: test  # Name of the experiment
 max_episodes: 300
