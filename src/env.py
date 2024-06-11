@@ -117,7 +117,7 @@ class Environment:
         if self._move_speed == 0:
             return stand_reward
         move_reward = rewards.tolerance(torso_velocity,
-                                bounds=(self._move_speed, self._move_speed),
+                                bounds=(self._move_speed-0.05, self._move_speed+0.05),
                                 margin=self._move_speed/2,
                                 value_at_margin=0.5,
                                 sigmoid='linear')
@@ -126,9 +126,16 @@ class Environment:
 
         # Get all the control values and calculate the action cost
         action_cost = 0
+        # dev_std = 0.175
+        # norm = 1/(2*np.pi*dev_std**2)**0.5
+        # for i in range (6):
+        #     # gaussian action cost with mean 0 and std 0.3
+        #     action_cost += (1/(2*np.pi*dev_std**2)**0.5*np.exp(-0.5*(self._last_action[i]/dev_std)**2))/norm
+        # action_cost = action_cost/6
         for i in range(6):
             action_cost += self._last_action[i]**2
         action_cost = 1 - action_cost/6
+        action_cost = rewards.tolerance(action_cost, bounds=(0.75, 1), margin=0.75, value_at_margin=0.5, sigmoid='linear')
 
         fitness = walk_std*action_cost 
         return fitness

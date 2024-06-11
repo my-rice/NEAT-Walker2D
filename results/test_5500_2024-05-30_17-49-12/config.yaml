@@ -1,0 +1,9 @@
+env_name: Walker2d-v5
+agent_name: LeggedRobot
+experiment_name: test_5500
+max_episodes: 300
+render: true
+generations: 60
+neat_config: config-neat.ini
+migration_steps: 5
+seed: 8921842

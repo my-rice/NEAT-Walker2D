@@ -1,10 +1,6 @@
-import random, sys, os, pygame
 import numpy as np
 from src.legged_robot import LeggedRobot
-from pygame.locals import *
 import gymnasium as gym
-import time
-import multiprocessing
 from src.env import Environment, AvailableEnvironments
 
 class LeggedRobotApp(object):

@@ -171,12 +171,7 @@ class PopulationWrapper(Population):
 
                 
                 self.reporters.end_generation(self.config, self.population, self.species)
-                indicizziamo = 0
-                if(rank==8):
-                    for key,value in specie_attuale.items():
-                            for m in value.members.keys():
-                                indicizziamo = indicizziamo+1
-                    print(indicizziamo)
+              
 
                 self.generation += 1
 

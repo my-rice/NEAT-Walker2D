@@ -93,8 +93,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
         west, east = cart_comm.Shift(1, 1)
         best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed)
         pickle.dump(best, open("actual"+str(rank)+".pkl", "wb"))
-        if(rank==0):
-            print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
+        print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
         
         if(count_migrations==migration_steps-1):
             try:

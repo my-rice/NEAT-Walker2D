@@ -1,0 +1,100 @@
+Results will be saved in  /home/daviderisi/natural_computation_project/legged_locomotion/results/test_new_reward_2024-06-06_17-00-50
+I am rank  2  and I am in generation  349  and best fitness is  200.26241073646992
+I am rank  1  and I am in generation  349  and best fitness is  176.4948879123191
+I am rank  3  and I am in generation  349  and best fitness is  200.9129574593176
+I am rank  5  and I am in generation  349  and best fitness is  215.14831148770975
+I am rank  0  and I am in generation  349  and best fitness is  263.445778548638
+I am rank  6  and I am in generation  349  and best fitness is  227.50160353825518
+I am rank  8  and I am in generation  349  and best fitness is  322.3891331961148
+I am rank  7  and I am in generation  349  and best fitness is  281.73739000603405
+I am rank  4  and I am in generation  349  and best fitness is  223.81629166739762
+I am rank  4  and I am in generation  699  and best fitness is  277.9740623613041
+I am rank  0  and I am in generation  699  and best fitness is  263.445778548638
+I am rank  2  and I am in generation  699  and best fitness is  282.92509820264087
+I am rank  8  and I am in generation  699  and best fitness is  348.065184299102
+I am rank  6  and I am in generation  699  and best fitness is  360.77091101365914
+I am rank  1  and I am in generation  699  and best fitness is  261.08321894512517
+I am rank  3  and I am in generation  699  and best fitness is  262.4780679134378
+I am rank  7  and I am in generation  699  and best fitness is  370.9951470106338
+I am rank  5  and I am in generation  699  and best fitness is  333.97899949214076
+I am rank  7  and I am in generation  1049  and best fitness is  370.9951470106338
+I am rank  5  and I am in generation  1049  and best fitness is  356.18308289897465
+I am rank  4  and I am in generation  1049  and best fitness is  405.87109138172167
+I am rank  1  and I am in generation  1049  and best fitness is  404.842275439949
+I am rank  3  and I am in generation  1049  and best fitness is  315.7766829683508
+I am rank  0  and I am in generation  1049  and best fitness is  340.54506775749934
+I am rank  6  and I am in generation  1049  and best fitness is  360.77091101365914
+I am rank  8  and I am in generation  1049  and best fitness is  350.88570084486605
+I am rank  2  and I am in generation  1049  and best fitness is  365.4405970246485
+I am rank  4  and I am in generation  1399  and best fitness is  405.87109138172167
+I am rank  1  and I am in generation  1399  and best fitness is  404.842275439949
+I am rank  7  and I am in generation  1399  and best fitness is  370.9951470106338
+I am rank  6  and I am in generation  1399  and best fitness is  360.77091101365914
+I am rank  3  and I am in generation  1399  and best fitness is  530.9104017405135
+I am rank  8  and I am in generation  1399  and best fitness is  360.639971899377
+I am rank  5  and I am in generation  1399  and best fitness is  415.3553411067029
+I am rank  0  and I am in generation  1399  and best fitness is  355.62561238275725
+I am rank  2  and I am in generation  1399  and best fitness is  365.4405970246485
+I am rank  7  and I am in generation  1749  and best fitness is  370.9951470106338
+I am rank  1  and I am in generation  1749  and best fitness is  404.842275439949
+I am rank  4  and I am in generation  1749  and best fitness is  405.87109138172167
+I am rank  8  and I am in generation  1749  and best fitness is  360.639971899377
+I am rank  3  and I am in generation  1749  and best fitness is  530.9104017405135
+I am rank  5  and I am in generation  1749  and best fitness is  415.3553411067029
+I am rank  6  and I am in generation  1749  and best fitness is  364.98216078030816
+I am rank  2  and I am in generation  1749  and best fitness is  366.7652319281316
+I am rank  0  and I am in generation  1749  and best fitness is  380.44280900935684
+I am rank  4  and I am in generation  2099  and best fitness is  443.99031313311394
+I am rank  1  and I am in generation  2099  and best fitness is  404.842275439949
+I am rank  7  and I am in generation  2099  and best fitness is  415.72113911691474
+I am rank  3  and I am in generation  2099  and best fitness is  530.9104017405135
+I am rank  8  and I am in generation  2099  and best fitness is  385.81636323177264
+I am rank  6  and I am in generation  2099  and best fitness is  391.01845603790787
+I am rank  5  and I am in generation  2099  and best fitness is  418.2563435013225
+I am rank  2  and I am in generation  2099  and best fitness is  366.7652319281316
+I am rank  0  and I am in generation  2099  and best fitness is  380.44280900935684
+I am rank  4  and I am in generation  2449  and best fitness is  443.99031313311394
+I am rank  1  and I am in generation  2449  and best fitness is  404.842275439949
+I am rank  3  and I am in generation  2449  and best fitness is  530.9104017405135
+I am rank  7  and I am in generation  2449  and best fitness is  415.72113911691474
+I am rank  8  and I am in generation  2449  and best fitness is  385.81636323177264
+I am rank  6  and I am in generation  2449  and best fitness is  391.01845603790787
+I am rank  5  and I am in generation  2449  and best fitness is  418.2563435013225
+I am rank  0  and I am in generation  2449  and best fitness is  380.44280900935684
+I am rank  2  and I am in generation  2449  and best fitness is  366.7652319281316
+I am rank  1  and I am in generation  2799  and best fitness is  404.842275439949
+I am rank  4  and I am in generation  2799  and best fitness is  443.99031313311394
+I am rank  7  and I am in generation  2799  and best fitness is  415.72113911691474
+I am rank  8  and I am in generation  2799  and best fitness is  434.21887538296886
+I am rank  3  and I am in generation  2799  and best fitness is  530.9104017405135
+I am rank  6  and I am in generation  2799  and best fitness is  391.01845603790787
+I am rank  0  and I am in generation  2799  and best fitness is  380.44280900935684
+I am rank  5  and I am in generation  2799  and best fitness is  418.2563435013225
+I am rank  2  and I am in generation  2799  and best fitness is  366.7652319281316
+I am rank  1  and I am in generation  3149  and best fitness is  404.842275439949
+I am rank  4  and I am in generation  3149  and best fitness is  443.99031313311394
+I am rank  7  and I am in generation  3149  and best fitness is  415.72113911691474
+I am rank  3  and I am in generation  3149  and best fitness is  530.9104017405135
+I am rank  6  and I am in generation  3149  and best fitness is  391.01845603790787
+I am rank  8  and I am in generation  3149  and best fitness is  434.21887538296886
+I am rank  0  and I am in generation  3149  and best fitness is  380.44280900935684
+I am rank  5  and I am in generation  3149  and best fitness is  418.2563435013225
+I am rank  2  and I am in generation  3149  and best fitness is  369.0629541333104
+I am rank  1  and I am in generation  3499  and best fitness is  404.842275439949
+I am rank  1  and I AM DONE, best fitness is  404.842275439949
+I am rank  4  and I am in generation  3499  and best fitness is  443.99031313311394
+I am rank  4  and I AM DONE, best fitness is  443.99031313311394
+I am rank  3  and I am in generation  3499  and best fitness is  530.9104017405135
+I am rank  3  and I AM DONE, best fitness is  530.9104017405135
+I am rank  8  and I am in generation  3499  and best fitness is  434.21887538296886
+I am rank  8  and I AM DONE, best fitness is  434.21887538296886
+I am rank  7  and I am in generation  3499  and best fitness is  419.8054943848833
+I am rank  7  and I AM DONE, best fitness is  419.8054943848833
+I am rank  6  and I am in generation  3499  and best fitness is  391.01845603790787
+I am rank  6  and I AM DONE, best fitness is  391.01845603790787
+I am rank  5  and I am in generation  3499  and best fitness is  418.2563435013225
+I am rank  5  and I AM DONE, best fitness is  418.2563435013225
+I am rank  0  and I am in generation  3499  and best fitness is  392.70460968979995
+I am rank  0  and I AM DONE, best fitness is  392.70460968979995
+I am rank  2  and I am in generation  3499  and best fitness is  372.3486476644677
+I am rank  2  and I AM DONE, best fitness is  372.3486476644677

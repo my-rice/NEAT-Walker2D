@@ -3,5 +3,4 @@ neat-cars/*
 outputs/*
 tdmpc2/*
 __pycache__/*
-results/*
 *.pkl
