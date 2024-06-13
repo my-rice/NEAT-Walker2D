@@ -115,7 +115,7 @@ class Environment:
         move_reward = rewards.tolerance(torso_velocity,
                                 bounds=(self._move_speed, self._move_speed),
                                 margin=self._move_speed/2,
-                                value_at_margin=0.5,
+                                value_at_margin=0.0,
                                 sigmoid='linear')
         walk_std = stand_reward * (5*move_reward + 1) / 6
         # alternate legs reward
@@ -125,6 +125,12 @@ class Environment:
         for i in range(6):
             action_cost += self._last_action[i]**2
         action_cost = 1 - action_cost/6
+
+        for i in range(6):
+                action_cost += self._last_action[i]**2
+        action_cost = action_cost/6
+        action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.0, margin=0.30, sigmoid='linear')
+
 
         fitness = walk_std*action_cost 
         return fitness

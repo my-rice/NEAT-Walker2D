@@ -123,42 +123,36 @@ class CustomPlanarWalker(walker.PlanarWalker):
         self.left_dominant = True
         print("CustomPlanarWalker initialized with move_speed:",self._move_speed)
 
-    def get_reward(self, physics):
-        #print("Using custom reward function")
+
+    def get_reward(self,physics):
+        #print("dir(physics):",dir(physics))
         standing = rewards.tolerance(physics.torso_height(),
-                                    bounds=(walker._STAND_HEIGHT, float('inf')),
-                                    margin=walker._STAND_HEIGHT/4)
+                                     bounds=(walker._STAND_HEIGHT, float('inf')),
+                                     margin=walker._STAND_HEIGHT/4)
         upright = (1 + physics.torso_upright()) / 2
         stand_reward = (3*standing + upright) / 4
         if self._move_speed == 0:
             return stand_reward
-        move_reward = rewards.tolerance(physics.horizontal_velocity(),
-                                bounds=(self._move_speed, self._move_speed),
-                                margin=self._move_speed/2,
-                                value_at_margin=0.5,
-                                sigmoid='linear')
-        walk_std = stand_reward * (5*move_reward + 1) / 6
-        # alternate legs reward
-
-        left_leg = physics.named.data.xpos['left_leg', 'x']
-        right_leg = physics.named.data.xpos['right_leg', 'x']
-
-        #print("left_leg:",left_leg,"right_leg:",right_leg)
-        alternate_legs = 0
-        if self.left_dominant:
-            if left_leg > right_leg + 0.1:
-                alternate_legs = 1
-                # Set the dominance for the next step
-                self.left_dominant = False
         else:
-            if right_leg > left_leg+ 0.1:
-                alternate_legs = 1
-                # Set the dominance for the next step
-                self.left_dominant = True
+            move_reward = rewards.tolerance(physics.horizontal_velocity(),
+                                            bounds=(self._move_speed-0.05, self._move_speed+0.05),
+                                            margin=self._move_speed/2,
+                                            value_at_margin=0.0,
+                                            sigmoid='linear')
+            walk_std = stand_reward * (5*move_reward + 1) / 6
 
-        #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
-        return (alternate_legs + 2*walk_std)/3 
+            action_cost = 0
+            # print("physics.control:",physics.control)
+            # print("dir(physics.comtrol):",dir(physics.control))
+            # print("physics.control():",physics.control())
+            for i in range(6):
+                action_cost += physics.control()[i]**2
+            action_cost = action_cost/6
+            action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.0, margin=0.30, sigmoid='linear')
 
+        #print("walk_std:",walk_std,"action_cost:",action_cost,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
+        return walk_std*action_cost
+        
 class BackwardsPlanarWalker(walker.PlanarWalker):
     """Backwards PlanarWalker task."""
     def __init__(self, move_speed, random=None):
