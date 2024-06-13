@@ -123,6 +123,41 @@ class CustomPlanarWalker(walker.PlanarWalker):
         self.left_dominant = True
         print("CustomPlanarWalker initialized with move_speed:",self._move_speed)
 
+    # def get_reward(self, physics):
+    #     #print("Using custom reward function")
+    #     standing = rewards.tolerance(physics.torso_height(),
+    #                                 bounds=(walker._STAND_HEIGHT, float('inf')),
+    #                                 margin=walker._STAND_HEIGHT/4)
+    #     upright = (1 + physics.torso_upright()) / 2
+    #     stand_reward = (3*standing + upright) / 4
+    #     if self._move_speed == 0:
+    #         return stand_reward
+    #     move_reward = rewards.tolerance(physics.horizontal_velocity(),
+    #                             bounds=(self._move_speed, self._move_speed),
+    #                             margin=self._move_speed/2,
+    #                             value_at_margin=0.5,
+    #                             sigmoid='linear')
+    #     walk_std = stand_reward * (5*move_reward + 1) / 6
+    #     # alternate legs reward
+
+    #     left_leg = physics.named.data.xpos['left_leg', 'x']
+    #     right_leg = physics.named.data.xpos['right_leg', 'x']
+
+    #     #print("left_leg:",left_leg,"right_leg:",right_leg)
+    #     alternate_legs = 0
+    #     if self.left_dominant:
+    #         if left_leg > right_leg + 0.1:
+    #             alternate_legs = 1
+    #             # Set the dominance for the next step
+    #             self.left_dominant = False
+    #     else:
+    #         if right_leg > left_leg+ 0.1:
+    #             alternate_legs = 1
+    #             # Set the dominance for the next step
+    #             self.left_dominant = True
+
+    #     #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
+    #     return (alternate_legs + 2*walk_std)/3 
 
     def get_reward(self,physics):
         #print("dir(physics):",dir(physics))
