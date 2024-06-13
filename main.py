@@ -1,39 +1,169 @@
+import neat.genome
 from src.env import Environment, AvailableEnvironments
 from src.legged_robot import LeggedRobot, AvailableAgents
 import hydra
 from omegaconf import MISSING, OmegaConf
+import neat
+from src.population_wrapper import PopulationWrapper
+import pickle
+from src.legged_robot_app import LeggedRobotApp
+from mpi4py import MPI
+import time
+import numpy as np
+import math
+from logger import Logger
+import random
+ENV_NAME = None
+AGENT_NAME = None
 
-# Create the environment
+
+def plot_winner(file_winner_net, config):
+    with open(file_winner_net, 'rb') as f:
+        winner = pickle.load(f)
+    print('\nBest genome:\n{!s}'.format(winner))
+
+def eval_genomes(genomes, config, seed):
+    
+    # Play game and get results
+    _,genomes = zip(*genomes)
+    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME, seed=seed)
+    legged_Bio.play()
+    results = legged_Bio.crash_info
+    
+    # Calculate fitness and top score
+    top_score = 0
+    for result in results:
+        genome = result[0]
+        fitness = result[1]
+        genome.fitness = fitness
+        if fitness > top_score:
+            top_score = fitness
+    for idx,genome in enumerate(genomes):
+        if genome.fitness == None:
+            print(idx)  
+        
+
+    # print score
+    #print('The top score was:', top_score)
+
+# def master_loop(migration_steps, bests_to_migrate, comm, size):
+
+
+#     comm.bcast(bests_to_migrate, root=0)# send to slaves number of bests to migrate
+
+#     # wait for slaves to finish and receive bests
+#     for i in range(1, size):
+#         data = comm.recv(source=i, tag=1)
+#         if(i==1):
+#             print(f"Master received data from slave {i}: {data}")
+#     # migration convention
+#     # send to slaves migrated bests or stop them
+#     # at then end of the entire loop, save the best and kill the remaining slaves
+#     pass
+
+def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
+    # wait for master to start with the number of information (one of them is the number of bests to migrate)
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+    seed=seed+rank
+    np.random.seed(seed)
+    random.seed(seed)
+    dims = [math.sqrt(size), math.sqrt(size)]
+    periods = [True, True]  
+    reorder = True 
+    cart_comm = comm.Create_cart(dims, periods=periods, reorder=reorder)
+    coords = cart_comm.Get_coords(rank)
+    
+
+
+    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         neat_config)
+
+    # Create the population, which is the top-level object for a NEAT run.
+    p = PopulationWrapper(config)
+    # Add a stdout reporter to show progress in the terminal.
+    # p.add_reporter(neat.StdOutReporter(True))
+    # Run until we achive n.
+    count_migrations = 0
+    while count_migrations < migration_steps:
+        north, south = cart_comm.Shift(0, 1)
+        west, east = cart_comm.Shift(1, 1)
+        best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed)
+        pickle.dump(best, open("actual"+str(rank)+".pkl", "wb"))
+        if(rank==0):
+            print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
+        
+        if(count_migrations==migration_steps-1):
+            try:
+                pickle.dump(best, open("winner"+str(rank)+".pkl", "wb"))
+                print("I am rank ", rank, " and I AM DONE, best fitness is ", best.fitness)
+            except:
+                print("I am rank ", rank, " and I AM BLOCKED size is ", size, " and count_migrations is ", count_migrations)
+            break
+        if(count_migrations==migration_steps-2):
+            comm.bcast(rank, root=rank)
+            recv_data = []
+            for i in range (size):
+                if i != rank:
+                    rank_received=comm.bcast(None,root=i)
+                    recv_data.append(rank_received)
+            recv_genomes = []
+            for neighbor in recv_data:
+                genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb')) # is rb so there isn't problem with mutual exclusion of files
+                recv_genomes.append(genomes)
+            p.replace_n_noobs(recv_genomes)
+           
+        else:
+            neighbors = [north, south, west, east]
+            for neighbor in neighbors:
+                if neighbor != MPI.PROC_NULL:
+                    comm.isend(rank, dest=neighbor, tag=1)
+            recv_data = []
+            for neighbor in neighbors:
+                if neighbor != MPI.PROC_NULL:
+                    rank_received = comm.recv(source=neighbor, tag=1)
+                    recv_data.append(rank_received)
+            recv_genomes = []
+            for neighbor in recv_data:
+                genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb'))
+                recv_genomes.append(genomes)
+
+            p.replace_n_noobs(recv_genomes)
+
+
+
+        count_migrations+=1
+        # sync receive from master what to do next
+        # if stop, break
+        # if continue, change population and continue loop
+
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):
+    global ENV_NAME, AGENT_NAME
     missing_keys: set[str] = OmegaConf.missing_keys(cfg)
     if missing_keys:
         raise RuntimeError(f"Got missing keys in config:\n{missing_keys}")
+    assert cfg.max_episodes > 0
+    assert cfg.generations > 0
+    assert cfg.render is True or cfg.render is False
     assert AvailableEnvironments.has_value(cfg.env_name)
     assert AvailableAgents.has_value(cfg.agent_name)
-    assert cfg.max_episodes > 0
-    assert cfg.render is True or cfg.render is False
-    env = Environment(cfg.env_name)
-        
-    observation_space_dim = env.get_observation_space()
-    action_space_dim = env.get_action_space()
-    # Create the legged robot agent
-    agent = LeggedRobot(observation_space_dim, action_space_dim)
-    print(agent)
-    # Main loop
-    for i in range(cfg.max_episodes):
-        observation = env.reset()
-        done = False
-        while not done:
-            action = agent.compute_action(observation)
-            observation, reward, done, info = env.step(action)
+    assert cfg.neat_config is not None
+    assert cfg.migration_steps > 0
+    assert cfg.seed is not None
+    ENV_NAME = cfg.env_name
+    AGENT_NAME = cfg.agent_name
 
-            print("Fitness: ", env.fitness())
-            #agent.update_agent(env.fitness())
-            if(cfg.render):
-                env.render()
-    env.close()
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
 
+    logger = Logger(cfg,rank=rank,comm=comm)
+    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger) # check if is a real config
+    
+    logger.save_results(rank=rank)
+    
 if __name__ == "__main__":
     main()
