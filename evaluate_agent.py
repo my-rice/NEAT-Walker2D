@@ -11,7 +11,7 @@ def run_winner(n=1):
                          'config-neat.ini')
     
     #load Genome
-    genomes = pickle.load(open('winner4.pkl', 'rb'))
+    genomes = pickle.load(open('results/fortewinner4.pkl', 'rb'))
     
     for i in range(0,n):
         # Play game and get results
