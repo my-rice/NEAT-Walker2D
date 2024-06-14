@@ -13,7 +13,8 @@ import numpy as np
 import math
 from logger import Logger
 import random
-
+import json
+import yaml
 from genome_wrapper import DefaultGenomeWrapper
 ENV_NAME = None
 AGENT_NAME = None
@@ -142,6 +143,71 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):
+
+    if cfg.multiple_experiments:
+        
+        # load multiple_exp.json
+        with open("multiple_exp.json") as f:
+            multiple_exp = json.load(f)
+        
+        #print("multiple_exp", multiple_exp)
+        exp_names = multiple_exp["experiments"]["exp_names"]
+        yaml_configs = multiple_exp["experiments"]["config_yaml"]
+        neat_configs = multiple_exp["experiments"]["config_neat"]
+
+        print("exp_names", exp_names)
+        print("yaml_configs", yaml_configs)
+        print("neat_configs", neat_configs)
+
+        for i,exp_name in enumerate(exp_names):
+            
+            # change the experiment name in the cfg object
+            cfg.experiment_name = exp_name
+
+            # load the config.yaml file
+            with open("config.yaml") as f:
+                config = yaml.safe_load(f)
+            
+            # update parameters in the config.yaml file
+            
+            for key, value in yaml_configs.items():
+                config[key] = value[i]
+            
+            print("config UPDATED", config)
+            # store the updated config.yaml file
+            with open("config.yaml", "w") as f:
+                yaml.dump(config, f)
+
+            # load the config_neat.ini file
+            with open("config_neat.ini") as f:
+                config_neat = f.read()
+            
+            for key, value in neat_configs.items():
+                # find a line that starts with key
+                lines = config_neat.split("\n")
+                for j,line in enumerate(lines):
+                    if line.startswith(key):
+                        lines[j] = key + " = " + str(value[i])
+                        break
+                config_neat = "\n".join(lines)
+
+            print("config_neat UPDATED", config_neat)
+
+            # store the updated config_neat.ini file
+            with open("config_neat.ini", "w") as f:
+                f.write(config_neat)
+            
+            # run the experiment
+            
+
+
+            #run_experiment(cfg)
+
+    else:
+        #run_experiment(cfg)
+        pass
+
+def run_experiment(cfg):
     global ENV_NAME, AGENT_NAME
     missing_keys: set[str] = OmegaConf.missing_keys(cfg)
     if missing_keys:

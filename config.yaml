@@ -7,3 +7,4 @@ generations: 120 # Number of generations for each population in the evolution be
 neat_config: config-neat.ini
 migration_steps: 4
 seed: 126921842
+multiple_experiments: True
