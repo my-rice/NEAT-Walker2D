@@ -2,11 +2,11 @@ import neat
 import pickle
 import sys
 from  src.legged_robot_app import LeggedRobotApp
-
+from genome_wrapper import DefaultGenomeWrapper
 
 def run_winner(n=1):
     # Load configuration.
-    config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
+    config = neat.Config(DefaultGenomeWrapper, neat.DefaultReproduction,
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          'config-neat.ini')
     
