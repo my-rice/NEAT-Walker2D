@@ -22,7 +22,23 @@ def main():
     if len(sys.argv)>1:
         run_winner(int(sys.argv[1]))
     else:
+        #run_all()
         run_winner()
+
+def run_all():
+    # Load configuration.
+    config = neat.Config(DefaultGenomeWrapper, neat.DefaultReproduction,
+                         neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                         'config-neat.ini')
+    
+    #load Genome
+    for i in range(0,10):
+        print("Running winner ", i)
+        genomes = pickle.load(open('results/fortewinner'+str(i)+'.pkl', 'rb'))
+        
+        # Play game and get results
+        flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")
+        flappy_Bio.play()
 
 if __name__ == "__main__":
 	main()
