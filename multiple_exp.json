@@ -2,12 +2,12 @@
     "experiments": {
         "exp_names": ["exp1", "exp2", "exp3"],
         "config_yaml": {
-            "generations": [100, 200, 300],
-            "migration_steps": [10, 20, 30],
+            "generations": [5, 7, 10],
+            "migration_steps": [1, 1, 1],
             "seed": [5616, 5617, 5618]
         },
         "config_neat": {
-            "pop_size": [100, 200, 300],
+            "pop_size": [10, 15, 20],
             "num_hidden": [10, 20, 30]
         }
     }

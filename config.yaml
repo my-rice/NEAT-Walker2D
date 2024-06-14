@@ -1,10 +1,10 @@
-env_name: Walker2d-v5
 agent_name: LeggedRobot
-experiment_name: test  # Name of the experiment
+env_name: Walker2d-v5
+experiment_name: exp3
+generations: 10
 max_episodes: 300
-render: True
-generations: 120 # Number of generations for each population in the evolution before the next migration
+migration_steps: 1
+multiple_experiments: true
 neat_config: config-neat.ini
-migration_steps: 4
-seed: 126921842
-multiple_experiments: True
+render: true
+seed: 5618

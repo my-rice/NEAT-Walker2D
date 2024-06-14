@@ -144,70 +144,100 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):
 
-    if cfg.multiple_experiments:
-        
-        # load multiple_exp.json
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    size = comm.Get_size()
+
+
+    if cfg.multiple_experiments:      
+        # run the experiment
+        num_experiments = 0
         with open("multiple_exp.json") as f:
             multiple_exp = json.load(f)
-        
-        #print("multiple_exp", multiple_exp)
         exp_names = multiple_exp["experiments"]["exp_names"]
-        yaml_configs = multiple_exp["experiments"]["config_yaml"]
-        neat_configs = multiple_exp["experiments"]["config_neat"]
+        num_experiments = len(exp_names)
 
-        print("exp_names", exp_names)
-        print("yaml_configs", yaml_configs)
-        print("neat_configs", neat_configs)
+        for i in range(0, num_experiments):
+            comm.Barrier()
+            if rank == 0:
+                configure_experiments_file(cfg, i)
+            comm.Barrier()
 
-        for i,exp_name in enumerate(exp_names):
-            
-            # change the experiment name in the cfg object
-            cfg.experiment_name = exp_name
-
-            # load the config.yaml file
             with open("config.yaml") as f:
                 config = yaml.safe_load(f)
             
-            # update parameters in the config.yaml file
-            
-            for key, value in yaml_configs.items():
-                config[key] = value[i]
-            
-            print("config UPDATED", config)
-            # store the updated config.yaml file
-            with open("config.yaml", "w") as f:
-                yaml.dump(config, f)
+            for key, value in config.items():
+                cfg[key] = value
 
-            # load the config_neat.ini file
-            with open("config_neat.ini") as f:
-                config_neat = f.read()
-            
-            for key, value in neat_configs.items():
-                # find a line that starts with key
-                lines = config_neat.split("\n")
-                for j,line in enumerate(lines):
-                    if line.startswith(key):
-                        lines[j] = key + " = " + str(value[i])
-                        break
-                config_neat = "\n".join(lines)
-
-            print("config_neat UPDATED", config_neat)
-
-            # store the updated config_neat.ini file
-            with open("config_neat.ini", "w") as f:
-                f.write(config_neat)
-            
-            # run the experiment
-            
-
-
-            #run_experiment(cfg)
-
+            run_experiment(cfg,rank,comm,size)
     else:
-        #run_experiment(cfg)
-        pass
+        run_experiment(cfg,rank,comm,size)
 
-def run_experiment(cfg):
+
+def configure_experiments_file(cfg,iteration=0):
+    
+    # load multiple_exp.json
+    with open("multiple_exp.json") as f:
+        multiple_exp = json.load(f)
+    
+    #print("multiple_exp", multiple_exp)
+    exp_names = multiple_exp["experiments"]["exp_names"]
+    yaml_configs = multiple_exp["experiments"]["config_yaml"]
+    neat_configs = multiple_exp["experiments"]["config_neat"]
+
+    print("exp_names", exp_names)
+    # print("yaml_configs", yaml_configs)
+    # print("neat_configs", neat_configs)
+    
+    exp_name = exp_names[iteration] 
+    i = iteration
+    print("Running experiment", i+1,"/",len(exp_names), "with name", exp_name)
+
+    # change the experiment name in the cfg object
+    cfg.experiment_name = exp_name
+
+    # load the config.yaml file
+    with open("config.yaml") as f:
+        config = yaml.safe_load(f)
+    
+    # update parameters in the config.yaml file
+    
+    for key, value in yaml_configs.items():
+        print("config[key]", config[key], "value[i]", value[i], "key", key, "value", value)
+        config[key] = value[i]
+        cfg[key] = value[i]
+        print("cfg[key]", cfg[key], "value[i]", value[i], "key", key, "value", value)
+    
+    config["experiment_name"] = exp_name
+
+    # sort the config.yaml file
+    config = dict(sorted(config.items()))
+    #print("config UPDATED", config)
+
+    # store the updated config.yaml file
+    with open("config.yaml", "w") as f:
+        yaml.dump(config, f)
+
+    # load the config_neat.ini file
+    with open("config-neat.ini") as f:
+        config_neat = f.read()
+    
+    for key, value in neat_configs.items():
+        # find a line that starts with key
+        lines = config_neat.split("\n")
+        for j,line in enumerate(lines):
+            if line.startswith(key):
+                lines[j] = key + " = " + str(value[i])
+                break
+        config_neat = "\n".join(lines)
+
+    #print("config_neat UPDATED", config_neat)
+
+    # store the updated config_neat.ini file
+    with open("config-neat.ini", "w") as f:
+        f.write(config_neat)
+
+def run_experiment(cfg,rank=0,comm=None,size=1):
     global ENV_NAME, AGENT_NAME
     missing_keys: set[str] = OmegaConf.missing_keys(cfg)
     if missing_keys:
@@ -223,9 +253,6 @@ def run_experiment(cfg):
     ENV_NAME = cfg.env_name
     AGENT_NAME = cfg.agent_name
 
-    comm = MPI.COMM_WORLD
-    rank = comm.Get_rank()
-    size = comm.Get_size()
 
     logger = Logger(cfg,rank=rank,comm=comm)
     slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger) # check if is a real config
