@@ -1,14 +1,14 @@
 {
     "experiments": {
-        "exp_names": ["exp1", "exp2", "exp3"],
+        "exp_names": ["prova", "exp2", "exp3"],
         "config_yaml": {
-            "generations": [5, 7, 10],
-            "migration_steps": [1, 1, 1],
-            "seed": [5616, 5617, 5618]
+            "generations": [1, 1, 1],
+            "migration_steps": [5, 4, 3],
+            "seed": [56136, 56136, 56136]
         },
         "config_neat": {
-            "pop_size": [10, 15, 20],
-            "num_hidden": [10, 20, 30]
+            "pop_size": [50, 60, 70],
+            "num_hidden": [100, 100, 100]
         }
     }
 }

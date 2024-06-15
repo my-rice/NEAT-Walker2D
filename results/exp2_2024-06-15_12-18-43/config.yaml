@@ -1,10 +1,10 @@
 agent_name: LeggedRobot
 env_name: Walker2d-v5
 experiment_name: exp2
-generations: 150
+generations: 1
 max_episodes: 300
 migration_steps: 4
-multiple_experiments: false
+multiple_experiments: true
 neat_config: config-neat.ini
 render: true
-seed: 056136
+seed: 56136
