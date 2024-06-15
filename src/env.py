@@ -117,9 +117,9 @@ class Environment:
         if self._move_speed == 0:
             return stand_reward
         move_reward = rewards.tolerance(torso_velocity,
-                                bounds=(self._move_speed-0.05, self._move_speed+0.05),
+                                bounds=(self._move_speed-0.1, self._move_speed+0.1),
                                 margin=self._move_speed/2,
-                                value_at_margin=0.0,
+                                value_at_margin=0.5,
                                 sigmoid='linear')
         walk_std = stand_reward * (5*move_reward + 1) / 6
         # alternate legs reward
@@ -132,16 +132,21 @@ class Environment:
         #     # gaussian action cost with mean 0 and std 0.3
         #     action_cost += (1/(2*np.pi*dev_std**2)**0.5*np.exp(-0.5*(self._last_action[i]/dev_std)**2))/norm
         # action_cost = action_cost/6
-        for i in range(6):
-            action_cost += self._last_action[i]**2
-        action_cost = 1 - action_cost/6
-        action_cost = rewards.tolerance(action_cost, bounds=(0.75, 1), margin=0.75, value_at_margin=0.5, sigmoid='linear')
+
+        # for i in range(6):
+        #     action_cost += self._last_action[i]**2
+        # action_cost = 1 - action_cost/6
+        # action_cost = rewards.tolerance(action_cost, bounds=(0.75, 1), margin=0.75, value_at_margin=0.5, sigmoid='linear')
+
+        # for i in range(6):
+        #         action_cost += self._last_action[i]**2
+        # action_cost = action_cost/6
+        # action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.2, margin=0.50, sigmoid='gaussian')
 
         for i in range(6):
-                action_cost += self._last_action[i]**2
+            action_cost += np.abs(self._last_action[i])
         action_cost = action_cost/6
-        action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.0, margin=0.30, sigmoid='linear')
-
+        action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
 
         fitness = walk_std*action_cost 
         return fitness

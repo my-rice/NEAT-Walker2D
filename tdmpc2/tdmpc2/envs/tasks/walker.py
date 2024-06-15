@@ -5,7 +5,7 @@ from dm_control.suite import common
 from dm_control.suite import walker
 from dm_control.utils import rewards
 from dm_control.utils import io as resources
-
+import numpy as np
 _TASKS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tasks')
 
 _YOGA_STAND_HEIGHT = 1.0
@@ -170,10 +170,10 @@ class CustomPlanarWalker(walker.PlanarWalker):
             return stand_reward
         else:
             move_reward = rewards.tolerance(physics.horizontal_velocity(),
-                                            bounds=(self._move_speed-0.05, self._move_speed+0.05),
-                                            margin=self._move_speed/2,
-                                            value_at_margin=0.0,
-                                            sigmoid='linear')
+                                bounds=(self._move_speed-0.1, self._move_speed+0.1),
+                                margin=self._move_speed/2,
+                                value_at_margin=0.5,
+                                sigmoid='linear')
             walk_std = stand_reward * (5*move_reward + 1) / 6
 
             action_cost = 0
@@ -185,7 +185,7 @@ class CustomPlanarWalker(walker.PlanarWalker):
             action_cost = action_cost/6
             action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.0, margin=0.30, sigmoid='linear')
 
-        #print("walk_std:",walk_std,"action_cost:",action_cost,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
+        print("action_cost:",action_cost,"mean:",sum(np.abs(physics.control()))/6)
         return walk_std*action_cost
         
 class BackwardsPlanarWalker(walker.PlanarWalker):
