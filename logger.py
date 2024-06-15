@@ -2,6 +2,7 @@ import os
 import datetime
 import pandas as pd
 from omegaconf import OmegaConf
+import pickle
 
 
 class Logger:
@@ -63,5 +64,15 @@ class Logger:
     def save_results(self,rank=0):
         """Save the results for the experiment for each rank. If the experiment is parallelized, please, provide the rank. Otherwise, the default rank is 0."""
         self.exp_data.to_csv(os.path.join(self.results_dir, f"results_{rank}.csv"), index=False)
+
+    def save_net(self, net, rank):
+        """Save the neural network"""
+        print("Sto salvando le reti")
+        path = os.path.join(self.results_dir, f"best_net_{rank}.pkl")
+        #pickle.dump(net, open("winner"+str(rank)+".pkl", "wb"))
+        pickle.dump(net, open(path, "wb"))
+
+        
+        
         
         

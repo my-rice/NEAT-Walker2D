@@ -98,7 +98,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger):
         
         if(count_migrations==migration_steps-1):
             try:
-                pickle.dump(best, open("winner"+str(rank)+".pkl", "wb"))
+                logger.save_net(best,rank)
                 print("I am rank ", rank, " and I AM DONE, best fitness is ", best.fitness)
             except:
                 print("I am rank ", rank, " and I AM BLOCKED size is ", size, " and count_migrations is ", count_migrations)
