@@ -148,5 +148,25 @@ class Environment:
         action_cost = action_cost/6
         action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
 
-        fitness = walk_std*action_cost 
+
+        angle_right_leg = self.observation[2]
+        angle_left_leg = self.observation[5]
+
+        if self.left_dominant:
+            self.left_dominant = False
+            if angle_left_leg >= angle_right_leg + (15/180*np.pi):
+                alternate_legs = 1
+            else:
+                alternate_legs = 0
+        else:
+            self.left_dominant = True
+            if angle_left_leg <= angle_right_leg - (15/180*np.pi):
+                alternate_legs = 1
+            else:
+                alternate_legs = 0
+
+
+        reward_alternate_legs = (1 + 3*self.alternate_legs) / 4
+
+        fitness = walk_std*action_cost*reward_alternate_legs
         return fitness
