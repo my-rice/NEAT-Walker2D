@@ -11,7 +11,7 @@ def run_winner(n=1):
                          'config-neat.ini')
     
     #load Genome
-    genomes = pickle.load(open('/home/giovanni/Desktop/progettodiDavidino/legged_locomotion/results/nuovafitness_2024-06-15_15-40-23/best_net_5.pkl', 'rb'))
+    genomes = pickle.load(open('results/nuovafitnessancora_2024-06-16_00-09-10/best_net_3.pkl', 'rb'))
     
     for i in range(0,n):
         # Play game and get results
