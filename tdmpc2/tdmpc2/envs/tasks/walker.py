@@ -226,6 +226,13 @@ class CustomPlanarWalker(walker.PlanarWalker):
 
     def get_reward(self, physics):
         #print("Using custom reward function")
+
+        if physics.time() < 0.003:
+            self.left_dominant = True
+            self.last_left_thigh_angle = 0
+            self.last_right_thigh_angle = 0
+
+
         standing = rewards.tolerance(physics.torso_height(),
                                     bounds=(walker._STAND_HEIGHT, float('inf')),
                                     margin=0.3,
@@ -289,30 +296,30 @@ class CustomPlanarWalker(walker.PlanarWalker):
 
 
         if self.left_dominant:
-            if np.abs(angle_left_thigh-angle_right_thigh) > (40*np.pi/180) and angle_left_thigh > angle_right_thigh:
+            if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_left_thigh > angle_right_thigh:
                 self.left_dominant = False
                 left_reward = 1
                 right_reward = 1
             else:
-                if angle_left_thigh > self.last_left_thigh_angle:
+                if angle_left_thigh >= self.last_left_thigh_angle:
                     left_reward = 1
                 else:
                     left_reward = 0
-                if angle_right_thigh < self.last_right_thigh_angle:
+                if angle_right_thigh <= self.last_right_thigh_angle:
                     right_reward = 1
                 else:
                     right_reward = 0
         else:
-            if np.abs(angle_left_thigh-angle_right_thigh) > (40*np.pi/180) and angle_right_thigh > angle_left_thigh:
+            if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_right_thigh > angle_left_thigh:
                 self.left_dominant = True   
                 left_reward = 1
                 right_reward = 1
             else:
-                if angle_left_thigh < self.last_left_thigh_angle:
+                if angle_left_thigh <= self.last_left_thigh_angle:
                     left_reward = 1
                 else:
                     left_reward = 0
-                if angle_right_thigh > self.last_right_thigh_angle:
+                if angle_right_thigh >= self.last_right_thigh_angle:
                     right_reward = 1
                 else:
                     right_reward = 0
@@ -325,7 +332,7 @@ class CustomPlanarWalker(walker.PlanarWalker):
 
         
         alternate_legs = (1 + 3*alternate_legs) / 4
-        print("self.left_dominant:",self.left_dominant,"angle_left_thigh:",angle_left_thigh,"angle_right_thigh:",angle_right_thigh)
+        #print("self.left_dominant:",self.left_dominant,"angle_left_thigh:",angle_left_thigh,"angle_right_thigh:",angle_right_thigh)
         # print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"standing",standing,"upright:",upright,"reward_torso:",reward_torso)
         return alternate_legs*walk_std*action_cost*reward_torso
         
