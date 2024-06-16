@@ -22,8 +22,8 @@ def main():
     if len(sys.argv)>1:
         run_winner(int(sys.argv[1]))
     else:
-        #run_all()
-        run_winner()
+        run_all()
+        #run_winner()
 
 def run_all():
     # Load configuration.
@@ -34,7 +34,7 @@ def run_all():
     #load Genome
     for i in range(0,10):
         print("Running winner ", i)
-        genomes = pickle.load(open('results/winner'+str(i)+'.pkl', 'rb'))
+        genomes = pickle.load(open('results/nuovafitnessancora_2024-06-16_00-09-10/best_net_'+str(i)+'.pkl', 'rb'))
         
         # Play game and get results
         flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")

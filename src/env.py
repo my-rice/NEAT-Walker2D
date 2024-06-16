@@ -167,6 +167,6 @@ class Environment:
 
 
         reward_alternate_legs = (1 + 3*self.alternate_legs) / 4
-
+        print("walk_std: ", walk_std, "action_cost: ", action_cost, "reward_alternate_legs: ", reward_alternate_legs,"angle_right_leg: ", angle_right_leg, "angle_left_leg: ", angle_left_leg)
         fitness = walk_std*action_cost*reward_alternate_legs
         return fitness

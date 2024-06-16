@@ -7,6 +7,7 @@ from dm_control.utils import rewards
 from dm_control.utils import io as resources
 import numpy as np
 from pyquaternion import Quaternion
+import csv
 _TASKS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'tasks')
 
 _YOGA_STAND_HEIGHT = 1.0
@@ -121,22 +122,124 @@ class CustomPlanarWalker(walker.PlanarWalker):
     """Custom PlanarWalker task."""
     def __init__(self, move_speed, random=None):
         super().__init__(move_speed, random)
-        self.left_dominant = True
         print("CustomPlanarWalker initialized with move_speed:",self._move_speed)
+        self.left_dominant = True
+        self.last_left_thigh_angle = 0
+        self.last_right_thigh_angle = 0
+        
+    # def get_reward(self, physics):
+    #     #print("Using custom reward function")
+    #     standing = rewards.tolerance(physics.torso_height(),
+    #                                 bounds=(walker._STAND_HEIGHT, float('inf')),
+    #                                 margin=walker._STAND_HEIGHT/4,
+    #                                 value_at_margin=0.0,
+    #                                 sigmoid='linear'
+    #                                 )
+    #     upright = (1 + physics.torso_upright()) / 2
+    #     stand_reward = (3*standing + upright) / 4
+    #     if self._move_speed == 0:
+    #         return stand_reward
+    #     move_reward = rewards.tolerance(physics.horizontal_velocity(),
+    #                             bounds=(self._move_speed-0.1, self._move_speed+0.1),
+    #                             margin=self._move_speed/2,
+    #                             value_at_margin=0.0,
+    #                             sigmoid='linear')
+    #     walk_std = stand_reward * (5*move_reward + 1) / 6
+    #     # alternate legs reward
+
+    #     action_cost = 0
+
+    #     for i in range(6):
+    #         action_cost += physics.control()[i]**2
+    #     action_cost = action_cost/6
+    #     action_cost = 1 - action_cost
+
+
+    #     #print("physics.named.data.xmat",physics.named.data.xpos)
+        
+    #     #print("physics.named.data.qvel",physics.named.data.qvel)
+    #     #print("physics.named.data.cvel",physics.named.data.cvel)
+    #     #print("dir physics.named.data.xmat",dir(physics.named.data))
+        
+
+    #     #print("physics.named.data.qvel[3:8]: right_ankle left_ankle:",physics.named.data.qvel[3:9])
+
+    #     # save a csv file with the velocities of the legs
+    #     # with open('/home/davide/nc_project/legged_locomotion/file.csv', mode='a') as file:
+    #     #     writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    #     #     writer.writerow([self.vel_left_leg, self.vel_right_leg])
+
+    #     current_left = physics.named.data.qvel[5]
+    #     current_right = physics.named.data.qvel[8]
+
+    #     quat_left_thigh = physics.named.data.xquat['left_leg']
+    #     quat_right_thigh = physics.named.data.xquat['right_leg']
+    #     quat_left_thigh = Quaternion(quat_left_thigh)
+    #     quat_right_thigh = Quaternion(quat_right_thigh)
+    #     angle_left_leg = quat_left_thigh.angle
+    #     angle_right_leg = quat_right_thigh.angle
+
+    #     #print("angle_left_leg:",angle_left_leg,"angle_right_leg:",angle_right_leg)
+
+    #     if self.left_dominant:
+    #         if angle_left_leg >= angle_right_leg + (25/180*np.pi):
+    #             self.left_dominant = False
+    #             left_reward = 1
+    #             right_reward = 1
+    #         else:
+    #             if current_left > self.vel_left_foot:
+    #                 left_reward = 1
+    #             else: 
+    #                 left_reward = 0
+    #             if current_right < self.vel_right_foot:
+    #                 right_reward = 1
+    #             else:
+    #                 right_reward = 0
+    #     else:
+    #         if angle_left_leg <= angle_right_leg - (25/180*np.pi):
+    #             self.left_dominant = True   
+    #             left_reward = 1
+    #             right_reward = 1
+    #         else:
+    #             if current_left < self.vel_left_foot:
+    #                 left_reward = 1
+    #             else: 
+    #                 left_reward = 0
+    #             if current_right > self.vel_right_foot:
+    #                 right_reward = 1
+    #             else:
+    #                 right_reward = 0
+
+    #     #print("angle_left_leg:",angle_left_leg,"angle_right_leg:",angle_right_leg, "l-r:",angle_left_leg-angle_right_leg)
+    #     #print("left_reward:",left_reward,"right_reward:",right_reward,"current_left:",current_left,"current_right:",current_right,"vel_left_foot:",self.vel_left_foot,"vel_right_foot:",self.vel_right_foot,"angle_left_leg:",angle_left_leg,"angle_right_leg:",angle_right_leg)
+
+    #     alternate_legs=((left_reward+right_reward) + left_reward*right_reward)/3
+
+    #     self.vel_left_foot = current_left
+    #     self.vel_right_foot = current_right
+
+    #     alternate_legs = (1 + 3*alternate_legs) / 4
+
+    #     #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
+    #     return alternate_legs*walk_std*action_cost
+
 
     def get_reward(self, physics):
         #print("Using custom reward function")
         standing = rewards.tolerance(physics.torso_height(),
                                     bounds=(walker._STAND_HEIGHT, float('inf')),
-                                    margin=walker._STAND_HEIGHT/4)
+                                    margin=0.3,
+                                    value_at_margin=0.0,
+                                    sigmoid='linear'
+                                    )
         upright = (1 + physics.torso_upright()) / 2
         stand_reward = (3*standing + upright) / 4
         if self._move_speed == 0:
             return stand_reward
         move_reward = rewards.tolerance(physics.horizontal_velocity(),
-                                bounds=(self._move_speed, self._move_speed),
+                                bounds=(self._move_speed-0.1, self._move_speed+0.1),
                                 margin=self._move_speed/2,
-                                value_at_margin=0.5,
+                                value_at_margin=0.0,
                                 sigmoid='linear')
         walk_std = stand_reward * (5*move_reward + 1) / 6
         # alternate legs reward
@@ -146,39 +249,150 @@ class CustomPlanarWalker(walker.PlanarWalker):
         for i in range(6):
             action_cost += physics.control()[i]**2
         action_cost = action_cost/6
-        action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.0, margin=0.30, sigmoid='linear')
+        action_cost = 1 - action_cost
 
-        #print("physics.named.data.xmat",physics.named.data.xquat)
+
+        # print("physics.named.data.xmat",physics.named.data.xpos)
+        # print("physics.named.data.xquat",physics.named.data.xquat)
+        #print("physics.named.data.qvel",physics.named.data.qvel)
+        #print("physics.named.data.cvel",physics.named.data.cvel)
         #print("dir physics.named.data.xmat",dir(physics.named.data))
+        
 
-        quat_left_leg = physics.named.data.xquat['left_leg']
-        quat_right_leg = physics.named.data.xquat['right_leg']
-        quat_left_leg = Quaternion(quat_left_leg)
-        quat_right_leg = Quaternion(quat_right_leg)
-        angle_left_leg = quat_left_leg.angle
-        angle_right_leg = quat_right_leg.angle
+        #print("physics.named.data.qvel[3:8]: right_ankle left_ankle:",physics.named.data.qvel[3:9])
+
+        # save a csv file with the velocities of the legs
+        # with open('/home/davide/nc_project/legged_locomotion/file.csv', mode='a') as file:
+        #     writer = csv.writer(file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        #     writer.writerow([self.vel_left_leg, self.vel_right_leg])
+
+
+        quat_left_thigh = physics.named.data.xquat['left_thigh']
+        quat_right_thigh = physics.named.data.xquat['right_thigh']
+        quat_left_thigh = Quaternion(quat_left_thigh)
+        quat_right_thigh = Quaternion(quat_right_thigh)
+        angle_left_thigh = quat_left_thigh.angle
+        angle_right_thigh = quat_right_thigh.angle
 
         #print("angle_left_leg:",angle_left_leg,"angle_right_leg:",angle_right_leg)
 
+        quat_torso = physics.named.data.xquat['torso']
+        quat_torso = Quaternion(quat_torso)
+        angle_torso = quat_torso.angle
+
+        reward_torso = rewards.tolerance(angle_torso,
+                                bounds=(-0.21, 0.21),
+                                margin=0.05,
+                                value_at_margin=0.0,
+                                sigmoid='linear')
+        reward_torso = (1 + 3*reward_torso) / 4
+
+
         if self.left_dominant:
-            self.left_dominant = False
-            if angle_left_leg >= angle_right_leg + (15/180*np.pi):
-                alternate_legs = 1
+            if np.abs(angle_left_thigh-angle_right_thigh) > (40*np.pi/180) and angle_left_thigh > angle_right_thigh:
+                self.left_dominant = False
+                left_reward = 1
+                right_reward = 1
             else:
-                alternate_legs = 0
+                if angle_left_thigh > self.last_left_thigh_angle:
+                    left_reward = 1
+                else:
+                    left_reward = 0
+                if angle_right_thigh < self.last_right_thigh_angle:
+                    right_reward = 1
+                else:
+                    right_reward = 0
         else:
-            self.left_dominant = True
-            if angle_left_leg <= angle_right_leg - (15/180*np.pi):
-                alternate_legs = 1
+            if np.abs(angle_left_thigh-angle_right_thigh) > (40*np.pi/180) and angle_right_thigh > angle_left_thigh:
+                self.left_dominant = True   
+                left_reward = 1
+                right_reward = 1
             else:
-                alternate_legs = 0
-        # left_leg = physics.named.data.xpos['left_leg', 'x']
-        # right_leg = physics.named.data.xpos['right_leg', 'x']
+                if angle_left_thigh < self.last_left_thigh_angle:
+                    left_reward = 1
+                else:
+                    left_reward = 0
+                if angle_right_thigh > self.last_right_thigh_angle:
+                    right_reward = 1
+                else:
+                    right_reward = 0
 
+        self.last_left_thigh_angle = angle_left_thigh
+        self.last_right_thigh_angle = angle_right_thigh
+
+        alternate_legs=((left_reward+right_reward) + left_reward*right_reward)/3
+
+
+        
         alternate_legs = (1 + 3*alternate_legs) / 4
+        print("self.left_dominant:",self.left_dominant,"angle_left_thigh:",angle_left_thigh,"angle_right_thigh:",angle_right_thigh)
+        # print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"standing",standing,"upright:",upright,"reward_torso:",reward_torso)
+        return alternate_legs*walk_std*action_cost*reward_torso
+        
 
-        #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
-        return alternate_legs*walk_std*action_cost
+
+
+
+
+    # def get_reward(self, physics):
+        # #print("Using custom reward function")
+        # standing = rewards.tolerance(physics.torso_height(),
+        #                             bounds=(walker._STAND_HEIGHT, float('inf')),
+        #                             margin=walker._STAND_HEIGHT/4)
+        # upright = (1 + physics.torso_upright()) / 2
+        # stand_reward = (3*standing + upright) / 4
+        # if self._move_speed == 0:
+        #     return stand_reward
+        # move_reward = rewards.tolerance(physics.horizontal_velocity(),
+        #                         bounds=(self._move_speed, self._move_speed),
+        #                         margin=self._move_speed/2,
+        #                         value_at_margin=0.5,
+        #                         sigmoid='linear')
+        # walk_std = stand_reward * (5*move_reward + 1) / 6
+        # # alternate legs reward
+
+        # action_cost = 0
+
+        # for i in range(6):
+        #     action_cost += physics.control()[i]**2
+        # action_cost = action_cost/6
+        # action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.0, margin=0.30, sigmoid='linear')
+
+        # #print("physics.named.data.xmat",physics.named.data.xquat)
+        # #print("dir physics.named.data.xmat",dir(physics.named.data))
+
+        # quat_left_thigh = physics.named.data.xquat['left_leg']
+        # quat_right_thigh = physics.named.data.xquat['right_leg']
+        # quat_left_thigh = Quaternion(quat_left_thigh)
+        # quat_right_thigh = Quaternion(quat_right_thigh)
+        # angle_left_leg = quat_left_thigh.angle
+        # angle_right_leg = quat_right_thigh.angle
+
+        # #print("angle_left_leg:",angle_left_leg,"angle_right_leg:",angle_right_leg)
+
+        # if self.left_dominant:
+        #     self.left_dominant = False
+        #     if angle_left_leg >= angle_right_leg + (15/180*np.pi):
+        #         alternate_legs = 1
+        #     else:
+        #         alternate_legs = 0
+        # else:
+        #     self.left_dominant = True
+        #     if angle_left_leg <= angle_right_leg - (15/180*np.pi):
+        #         alternate_legs = 1
+        #     else:
+        #         alternate_legs = 0
+        # # left_leg = physics.named.data.xpos['left_leg', 'x']
+        # # right_leg = physics.named.data.xpos['right_leg', 'x']
+
+        # alternate_legs = (1 + 3*alternate_legs) / 4
+
+        # #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"stand_reward:",stand_reward,"upright:",upright)
+        # return alternate_legs*walk_std*action_cost
+
+
+
+
 
     # def get_reward(self,physics):
     #     #print("dir(physics):",dir(physics))
