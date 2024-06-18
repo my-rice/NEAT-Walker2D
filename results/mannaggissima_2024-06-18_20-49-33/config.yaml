@@ -1,6 +1,6 @@
 agent_name: LeggedRobot
 env_name: Walker2d-v5
-experiment_name: exp2
+experiment_name: mannaggissima
 generations: 300
 max_episodes: 300
 migration_steps: 2
