@@ -32,7 +32,7 @@ def run_all():
                          'config-neat.ini')
     
     #load Genome
-    for i in range(0,1):
+    for i in range(0,10):
         print("Running winner ", i)
         genomes = pickle.load(open('results/mannaggia_2024-06-18_11-51-41/best_net_'+str(i)+".pkl", 'rb'))
         

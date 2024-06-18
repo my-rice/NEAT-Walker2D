@@ -89,6 +89,8 @@ class Environment:
         left_usage = self.left_time/self.time
         right_usage = 1 - left_usage
         alternate_legs = left_usage + right_usage - np.abs(left_usage - right_usage)
+        print("Fitness totale",self.get_fitness)
+        print("Peso legs", alternate_legs)
         return self.fitness*alternate_legs
 
     def compute_fitness(self):
