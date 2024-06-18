@@ -106,10 +106,12 @@ class PopulationWrapper(Population):
         self.rank = rank
         if self.config.no_fitness_termination and (n is None):
             raise RuntimeError("Cannot have no generational limit with no fitness termination")
-        
+            
         k=0
         while n is None or k < n:
             k += 1
+            if(rank==0 and k%50==0):
+                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
             #print("I am rank ", rank, " and I am in generation ", self.generation)
             self.reporters.start_generation(self.generation)
             
@@ -129,7 +131,7 @@ class PopulationWrapper(Population):
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
             
-                    
+            # print(best.fitness)   
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
                 fv = self.fitness_criterion(g.fitness for g in itervalues(self.population))

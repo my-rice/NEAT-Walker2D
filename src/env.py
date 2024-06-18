@@ -7,7 +7,7 @@ from dm_control.utils import rewards
 
 
 # Minimal height of torso over foot above which stand reward is 1.
-_STAND_HEIGHT = 1.2
+_STAND_HEIGHT = 1.225
 
 # Horizontal speeds (meters/second) above which move reward is 1.
 _WALK_SPEED = 1
@@ -32,10 +32,13 @@ class Environment:
         self.iter = 0
         self.total_action_cost = 0
         self.done = False
-        self.left_dominant = False
-
+        self.left_dominant = True
+        self.last_left_thigh_angle=0
+        self.last_right_thigh_angle=0
+        self.time = 0
+        self.left_time = 0
         self._move_speed = _WALK_SPEED
-
+        self.fitness = 0
 
     def step(self, action):
         self._last_action = action
@@ -55,6 +58,13 @@ class Environment:
         else:
             self.observation = self.env.reset()[0]
         self.iter = 0
+        self.total_action_cost = 0
+        self.done = False
+        self.left_dominant = True
+        self.last_left_thigh_angle=0
+        self.last_right_thigh_angle=0
+        self.time = 0
+        self.left_time = 0
         return self.observation
 
     def render(self):
@@ -75,13 +85,14 @@ class Environment:
     def compute_action_cost(self, action):
         return np.linalg.norm(action)
 
+    def get_fitness(self):
+        left_usage = self.left_time/self.time
+        right_usage = 1 - left_usage
+        alternate_legs = left_usage + right_usage - np.abs(left_usage - right_usage)
+        return self.fitness*alternate_legs
 
-    def fitness(self):
-        # if physics.time() < 0.003:
-        #     self.left_dominant = True
-        #     self.last_left_thigh_angle = 0
-        #     self.last_right_thigh_angle = 0
-
+    def compute_fitness(self):
+        self.time += 1
         torso_height = self.observation[0]
         torso_velocity = self.observation[8]
         standing = rewards.tolerance(torso_height,
@@ -124,45 +135,45 @@ class Environment:
         angle_left_thigh = self.observation[5]
 
         if self.left_dominant:
+            self.left_time += 1
             if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_left_thigh > angle_right_thigh:
                 self.left_dominant = False
-                left_reward = 1
-                right_reward = 1
-            else:
-                if angle_left_thigh >= self.last_left_thigh_angle:
-                    left_reward = 1
-                else:
-                    left_reward = 0
-                if angle_right_thigh <= self.last_right_thigh_angle:
-                    right_reward = 1
-                else:
-                    right_reward = 0
+            
+            # else:
+            #     if angle_left_thigh >= self.last_left_thigh_angle:
+            #         left_reward = 1
+            #     else:
+            #         left_reward = 0
+            #     if angle_right_thigh <= self.last_right_thigh_angle:
+            #         right_reward = 1
+            #     else:
+            #         right_reward = 0
         else:
             if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_right_thigh > angle_left_thigh:
                 self.left_dominant = True   
-                left_reward = 1
-                right_reward = 1
-            else:
-                if angle_left_thigh <= self.last_left_thigh_angle:
-                    left_reward = 1
-                else:
-                    left_reward = 0
-                if angle_right_thigh >= self.last_right_thigh_angle:
-                    right_reward = 1
-                else:
-                    right_reward = 0
+                
+            # else:
+            #     if angle_left_thigh <= self.last_left_thigh_angle:
+            #         left_reward = 1
+            #     else:
+            #         left_reward = 0
+            #     if angle_right_thigh >= self.last_right_thigh_angle:
+            #         right_reward = 1
+            #     else:
+            #         right_reward = 0
 
-        self.last_left_thigh_angle = angle_left_thigh
-        self.last_right_thigh_angle = angle_right_thigh
-
-        alternate_legs=((left_reward+right_reward) + left_reward*right_reward)/3
-
-
+        # self.last_left_thigh_angle = angle_left_thigh
+        # self.last_right_thigh_angle = angle_right_thigh
         
-        alternate_legs = (1 + 3*alternate_legs) / 4
+        # alternate_legs=((left_reward+right_reward) + left_reward*right_reward)/3
+
+        # #time_tolerance = rewards.tolerance(self.left_time/self.time,bounds=(0.45,0.55),margin=0.1,value_at_margin=0.0,sigmoid='linear')
+        
+
+        # alternate_legs = (1 + 3*alternate_legs) / 4
         #print("self.left_dominant:",self.left_dominant,"angle_left_thigh:",angle_left_thigh,"angle_right_thigh:",angle_right_thigh)
-        # print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"standing",standing,"upright:",upright,"reward_torso:",reward_torso)
-        return alternate_legs*walk_std*action_cost*reward_torso
+        #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"standing",standing,"upright:",upright,"reward_torso:",reward_torso)
+        self.fitness += walk_std*action_cost*reward_torso
 
 
     # def fitness(self):
