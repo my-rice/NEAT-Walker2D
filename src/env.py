@@ -2,7 +2,7 @@ import gymnasium as gym
 from enum import Enum
 import numpy as np
 import random
-
+import math
 from dm_control.utils import rewards
 
 
@@ -89,8 +89,7 @@ class Environment:
         left_usage = self.left_time/self.time
         right_usage = 1 - left_usage
         alternate_legs = left_usage + right_usage - np.abs(left_usage - right_usage)
-        print("Fitness totale",self.get_fitness)
-        print("Peso legs", alternate_legs)
+        alternate_legs = rewards.tolerance(alternate_legs,bounds=(0.45,0.55),margin=0.15,value_at_margin=0.0, sigmoid="linear")
         return self.fitness*alternate_legs
 
     def compute_fitness(self):
@@ -135,13 +134,14 @@ class Environment:
 
         angle_right_thigh = self.observation[2]
         angle_left_thigh = self.observation[5]
-
+      
+            # else:
         if self.left_dominant:
             self.left_time += 1
-            if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_left_thigh > angle_right_thigh:
-                self.left_dominant = False
+
+        if angle_left_thigh > angle_right_thigh+math.radians(30):
+            self.left_dominant = True
             
-            # else:
             #     if angle_left_thigh >= self.last_left_thigh_angle:
             #         left_reward = 1
             #     else:
@@ -150,10 +150,12 @@ class Environment:
             #         right_reward = 1
             #     else:
             #         right_reward = 0
-        else:
-            if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_right_thigh > angle_left_thigh:
-                self.left_dominant = True   
-                
+        
+        if angle_right_thigh > angle_left_thigh+math.radians(30):
+                self.left_dominant = False   
+        
+          
+     
             # else:
             #     if angle_left_thigh <= self.last_left_thigh_angle:
             #         left_reward = 1
