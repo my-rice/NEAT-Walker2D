@@ -35,7 +35,7 @@ def run_all():
     for i in range(0,9):
         print("Running winner ", i)
         try:
-            genomes = pickle.load(open('results/mannaggissima_meglio_2024-06-19_00-14-02/best_net_'+str(i)+".pkl", 'rb'))
+            genomes = pickle.load(open('best_for_now'+str(i)+".pkl", 'rb'))
         
             # Play game and get results
             flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")

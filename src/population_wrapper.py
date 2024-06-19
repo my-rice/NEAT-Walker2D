@@ -4,7 +4,7 @@ from neat.six_util import iteritems, itervalues
 import heapq
 import time
 import random
-    
+import pickle
 class CompleteExtinctionException(Exception):
     pass
 
@@ -17,6 +17,7 @@ class PopulationWrapper(Population):
         #     self.population_ranking.append((fitness, g.key))
         # heapq.heapify(self.population_ranking)
         self.rank = None
+        self.last_printed = 0
     def get_population(self):
         return self.population # DA LEVARE
     
@@ -110,8 +111,10 @@ class PopulationWrapper(Population):
         k=0
         while n is None or k < n:
             k += 1
-            if(rank==0 and k%50==0):
+            if(k%50==0):
                 print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                pickle.dump(self.best_genome, open("best_for_now"+str(rank)+".pkl", "wb"))
+
             #print("I am rank ", rank, " and I am in generation ", self.generation)
             self.reporters.start_generation(self.generation)
             
@@ -130,8 +133,9 @@ class PopulationWrapper(Population):
             # Track the best genome ever seen.
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
-            
-            #print(best.fitness)   
+            if(self.best_genome.fitness>self.last_printed):
+                self.last_printed = self.best_genome.fitness
+                print("The best of rank:", rank, "is", self.best_genome.fitness)   
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
                 fv = self.fitness_criterion(g.fitness for g in itervalues(self.population))

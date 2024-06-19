@@ -37,9 +37,9 @@ class LeggedRobotApp(object):
             #     env[1]=env[1][0]
             action = agent.compute_action(env.get_current_observation())
             _, _, done , _=env.step(action)
-            env.compute_fitness()
+            env.fitness()
             if done:
-                fitness = env.get_fitness()
+                fitness = env.get_total_fitness()
                 self.set_fitness(fitness, count)
                 self.crash_info.append((agent.get_genome(), fitness))
                 del self.experiments[count]
