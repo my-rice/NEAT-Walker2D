@@ -32,13 +32,16 @@ def run_all():
                          'config-neat.ini')
     
     #load Genome
-    for i in range(0,10):
+    for i in range(0,9):
         print("Running winner ", i)
-        genomes = pickle.load(open('results/mannaggia_2024-06-18_11-51-41/best_net_'+str(i)+".pkl", 'rb'))
+        try:
+            genomes = pickle.load(open('results/mannaggissima_meglio_2024-06-19_00-14-02/best_net_'+str(i)+".pkl", 'rb'))
         
-        # Play game and get results
-        flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")
-        flappy_Bio.play()
+            # Play game and get results
+            flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")
+            flappy_Bio.play()
+        except:
+            pass
 
 if __name__ == "__main__":
 	main()

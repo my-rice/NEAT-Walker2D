@@ -1,0 +1,10 @@
+agent_name: LeggedRobot
+env_name: Walker2d-v5
+experiment_name: fitnessconalternanza30gradi
+generations: 250
+max_episodes: 300
+migration_steps: 2
+multiple_experiments: false
+neat_config: config-neat.ini
+render: true
+seed: 9256136

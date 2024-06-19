@@ -131,7 +131,7 @@ class PopulationWrapper(Population):
             if self.best_genome is None or best.fitness > self.best_genome.fitness:
                 self.best_genome = best
             
-            # print(best.fitness)   
+            #print(best.fitness)   
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
                 fv = self.fitness_criterion(g.fitness for g in itervalues(self.population))
