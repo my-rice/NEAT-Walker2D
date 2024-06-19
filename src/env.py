@@ -80,7 +80,7 @@ class Environment:
         return self.action_space.shape[0]
     
     def get_current_observation(self):
-        return self.observation
+        return self.observation 
     
     def compute_action_cost(self, action):
         return np.linalg.norm(action)
@@ -89,7 +89,8 @@ class Environment:
         left_usage = self.left_time/self.time
         right_usage = 1 - left_usage
         alternate_legs = left_usage + right_usage - np.abs(left_usage - right_usage)
-        alternate_legs = rewards.tolerance(alternate_legs,bounds=(0.45,0.55),margin=0.15,value_at_margin=0.0, sigmoid="linear")
+        alternate_legs = rewards.tolerance(alternate_legs,bounds=(0.85,1.0),margin=0.15,value_at_margin=0.1, sigmoid="gaussian")
+        #print("alternate_legs: ", alternate_legs, "left_usage: ", left_usage, "right_usage: ", right_usage, "fitness: ", self.fitness, "real fitness: ", self.fitness*alternate_legs)
         return self.fitness*alternate_legs
 
     def compute_fitness(self):
@@ -112,7 +113,7 @@ class Environment:
         move_reward = rewards.tolerance(torso_velocity,
                                 bounds=(_WALK_SPEED-0.1, _WALK_SPEED+0.1),
                                 margin=_WALK_SPEED/2,
-                                value_at_margin=0.0,
+                                value_at_margin=0.1,
                                 sigmoid='linear')
         walk_std = stand_reward * (5*move_reward + 1) / 6
         # alternate legs reward
@@ -120,10 +121,10 @@ class Environment:
         action_cost = 0
 
         for i in range(6):
-            action_cost += self._last_action[i]**2
+            action_cost += np.abs(self._last_action[i])
         action_cost = action_cost/6
-        action_cost = 1 - action_cost
 
+        action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.225, sigmoid='hyperbolic')
 
         reward_torso = rewards.tolerance(angle_torso,
                                 bounds=(-0.21, 0.21),
@@ -177,7 +178,7 @@ class Environment:
         # alternate_legs = (1 + 3*alternate_legs) / 4
         #print("self.left_dominant:",self.left_dominant,"angle_left_thigh:",angle_left_thigh,"angle_right_thigh:",angle_right_thigh)
         #print("walk_std:",walk_std,"alternate_legs:",alternate_legs,"move_reward:",move_reward,"standing",standing,"upright:",upright,"reward_torso:",reward_torso)
-        self.fitness += walk_std*action_cost*reward_torso
+        self.fitness += walk_std*action_cost#*reward_torso
 
 
     # def fitness(self):
