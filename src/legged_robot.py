@@ -13,11 +13,15 @@ class AvailableAgents(Enum):
 
 class LeggedRobot(Agent):
 
-    def __init__(self, observation_space_dim, action_space_dim, genome, config) -> None: # teoricamente qua dovrebbe cambiare in base all'agente che passiamo
+    def __init__(self, observation_space_dim, action_space_dim, genome, config, feed_forward) -> None: # teoricamente qua dovrebbe cambiare in base all'agente che passiamo
         # We need to initialize the neural network with the given observation space and action space
-        self.genome = genome
-        self.neural_network = neat.nn.RecurrentNetwork.create(genome,config)
+        if(feed_forward == True):
+            self.neural_network = neat.nn.FeedForwardNetwork.create(genome,config)
+        else:
+            self.neural_network = neat.nn.RecurrentNetwork.create(genome,config)
         self.observation_space_dim = observation_space_dim
+        self.genome = genome
+        self.config = config
         self.action_space_dim = action_space_dim     
 
     def get_genome(self):

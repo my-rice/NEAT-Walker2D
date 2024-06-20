@@ -26,6 +26,8 @@ class Environment:
             np.random.seed(seed)
             random.seed(seed)
         self.env = gym.make(env_name, render_mode=mode)
+        # change step number
+        self.env._max_episode_steps = 1000
         self.observation = self.reset(seed=seed)
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -65,8 +67,8 @@ class Environment:
         self.last_left_thigh_angle=0
         self.last_right_thigh_angle=0
         self.time = 0
-        self.left_time = 0
-        self.right_time = 0
+        self.left_time = 0.0
+        self.right_time = 0.0
         return self.observation
 
     def render(self):
@@ -88,8 +90,18 @@ class Environment:
         return np.linalg.norm(action)
 
     def get_total_fitness(self):
-        return self.computed_walk_alternate()
+        #return self.computed_walk_alternate()
+        return self.just_alternate_legs()
 
+    def just_alternate_legs(self):
+        alternate_legs = (self.left_time+self.right_time)-np.abs(self.left_time-self.right_time)+0.25
+        #print("alternate_legs",alternate_legs)
+        return alternate_legs
+        # if(self.left_time+self.right_time==0):
+        #     return 0
+        # alternate_legs = (self.left_time+self.right_time-np.abs(self.left_time-self.right_time))
+        # return alternate_legs
+    
     def computed_walk_alternate(self): 
         '''
             Weights the reward based on the time spent on each leg going forward
@@ -100,7 +112,8 @@ class Environment:
         return alternate_legs*self.current_fitness
 
     def fitness(self):
-        self.computed_walk_alternate_fitness_with_legs()
+        #self.computed_walk_alternate_fitness_with_legs()
+        self.computed_walk_alternate_fitness()
 
     def computed_walk_alternate_fitness_with_legs(self):
 
@@ -148,20 +161,26 @@ class Environment:
         angle_left_thigh = self.observation[5]
         angle_right_leg = self.observation[3]
         angle_left_leg = self.observation[6]
+        # print("angle_right_thigh",angle_right_thigh, "angle_left_thigh",angle_left_thigh, "angle_right_leg",angle_right_leg, "angle_left_leg",angle_left_leg)
         difference = np.abs(angle_left_thigh-angle_right_thigh)
-        difference = rewards.tolerance(difference,bounds=(0.0,0.8),margin=0.5,value_at_margin=0.1,sigmoid='linear')
+        weight = rewards.tolerance(difference,bounds=(0.0,0.8),margin=0.5,value_at_margin=0.1,sigmoid='linear')
+        difference = weight*difference
+
+        zero_neighbor_up = 0.12
+        zero_neighbor_down = -0.12
         if self.left_dominant:
             if(torso_velocity*0.002>0):
                 self.left_time += torso_velocity*0.002*difference
         else:
             if(torso_velocity*0.002>0):
                 self.right_time += torso_velocity*0.002*difference
-        if angle_left_thigh > angle_right_thigh+math.radians(45) and angle_left_leg > angle_right_leg+math.radians(45):
+
+        if angle_left_thigh > angle_right_thigh+math.radians(45) and angle_left_leg > zero_neighbor_down and angle_left_leg < zero_neighbor_up:
             self.left_dominant = True
             
            
-        if angle_right_thigh > angle_left_thigh+math.radians(45) and angle_right_leg > angle_left_leg+math.radians(45):
-                self.left_dominant = False   
+        if angle_right_thigh > angle_left_thigh+math.radians(45) and angle_right_leg > zero_neighbor_down and angle_right_leg < zero_neighbor_up:
+            self.left_dominant = False   
         
           
      
@@ -216,10 +235,10 @@ class Environment:
         difference = rewards.tolerance(difference,bounds=(0.0,0.8),margin=0.5,value_at_margin=0.1,sigmoid='linear')
         if self.left_dominant:
             if(torso_velocity*0.002>0):
-                self.left_time += torso_velocity*0.002*difference
+                self.left_time += torso_velocity*0.002#*difference
         else:
             if(torso_velocity*0.002>0):
-                self.right_time += torso_velocity*0.002*difference
+                self.right_time += torso_velocity*0.002#*difference
         if angle_left_thigh > angle_right_thigh+math.radians(45):
             self.left_dominant = True
             

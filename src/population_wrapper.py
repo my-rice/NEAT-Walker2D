@@ -103,7 +103,7 @@ class PopulationWrapper(Population):
         self.generation += 1
         
         
-    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None):
+    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None, feed_forward=True):
         self.rank = rank
         if self.config.no_fitness_termination and (n is None):
             raise RuntimeError("Cannot have no generational limit with no fitness termination")
@@ -112,14 +112,15 @@ class PopulationWrapper(Population):
         while n is None or k < n:
             k += 1
             if(k%50==0):
-                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
+                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "Rank:",rank)
                 pickle.dump(self.best_genome, open("best_for_now"+str(rank)+".pkl", "wb"))
+                # print("The best of rank:", rank, "is", self.best_genome.fitness)
 
             #print("I am rank ", rank, " and I am in generation ", self.generation)
             self.reporters.start_generation(self.generation)
             
             # Evaluate all genomes using the user-provided function.
-            fitness_function(list(iteritems(self.population)), self.config, seed)
+            fitness_function(list(iteritems(self.population)), self.config, seed, feed_forward=feed_forward)
 
             # Gather and report statistics.
             best = None
