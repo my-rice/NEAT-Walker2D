@@ -42,6 +42,7 @@ class Environment:
         self.right_time = 0
         self._move_speed = _WALK_SPEED
         self.current_fitness = 0
+        self.total_fitness = 0
 
     def step(self, action):
         self._last_action = action
@@ -67,8 +68,10 @@ class Environment:
         self.last_left_thigh_angle=0
         self.last_right_thigh_angle=0
         self.time = 0
-        self.left_time = 0.0
-        self.right_time = 0.0
+        self.left_time = 0
+        self.right_time = 0
+        self.total_fitness = 0
+        self.current_fitness = 0
         return self.observation
 
     def render(self):
@@ -188,9 +191,6 @@ class Environment:
         self.current_fitness += walk_std*action_cost*reward_torso
 
     def computed_walk_alternate_fitness(self):
-
-
-        
         self.time += 1
         torso_height = self.observation[0]
         torso_velocity = self.observation[8]
@@ -248,8 +248,8 @@ class Environment:
         
           
      
-        
-        self.current_fitness += walk_std*action_cost*reward_torso
+        self.current_fitness = walk_std*action_cost*reward_torso
+        self.total_fitness += self.current_fitness
 
     def computed_time_alternate(self):
         left_usage = self.left_time/self.time
@@ -316,7 +316,7 @@ class Environment:
         
           
      
-        self.current_fitness += walk_std*action_cost*reward_torso
+        self.total_fitness += walk_std*action_cost*reward_torso
     
     def compute_time_instant_fitness(self):
         torso_height = self.observation[0]
@@ -397,8 +397,9 @@ class Environment:
         
         alternate_legs = (1 + 3*alternate_legs) / 4
 
-        return alternate_legs*walk_std*action_cost*reward_torso
-    
+        self.current_fitness = alternate_legs*walk_std*action_cost*reward_torso
+        self.total_fitness += self.current_fitness
+
     def compute_standard_fitness(self):
         
 
@@ -440,7 +441,6 @@ class Environment:
         action_cost = action_cost/6
         action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
 
-        current_fitness = walk_std*action_cost 
-        return current_fitness
+        self.current_fitness = walk_std*action_cost 
+        self.total_fitness += self.current_fitness
 
-  

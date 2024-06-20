@@ -231,7 +231,7 @@ class CustomPlanarWalker(walker.PlanarWalker):
     def get_reward(self, physics):
         #print("Using custom reward function")
 
-        if physics.time() < 0.003:
+        if physics.time() < 0.03:
             self.left_dominant = True
             self.last_left_thigh_angle = 0
             self.last_right_thigh_angle = 0
