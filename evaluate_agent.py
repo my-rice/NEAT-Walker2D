@@ -15,7 +15,7 @@ def run_winner(n=1):
     
     for i in range(0,n):
         # Play game and get results
-        flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")
+        flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5", feed_forward=False)
         flappy_Bio.play()
 
 def main():
@@ -33,12 +33,12 @@ def run_all():
     
     #load Genome
     for i in range(0,9):
-        print("Running winner ", i)
+        print("Running winners ", i)
         try:
             genomes = pickle.load(open('best_for_now'+str(i)+".pkl", 'rb'))
         
             # Play game and get results
-            flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5")
+            flappy_Bio = LeggedRobotApp([genomes], config, render=True, env_name="Walker2d-v5", feed_forward=False)
             flappy_Bio.play()
         except:
             pass
