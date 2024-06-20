@@ -127,6 +127,7 @@ class PopulationWrapper(Population):
                 if best is None or g.fitness > best.fitness:
                     best = g
             self.reporters.post_evaluate(self.config, self.population, self.species, best)
+
             if logger is not None:
                 logger.log(rank=rank, generation=k, fitness=best.fitness, migration_step=migration_step)
 
@@ -135,7 +136,7 @@ class PopulationWrapper(Population):
                 self.best_genome = best
             if(self.best_genome.fitness>self.last_printed):
                 self.last_printed = self.best_genome.fitness
-                print("The best of rank:", rank, "is", self.best_genome.fitness)   
+                print("The best of rank:", rank, "is", self.best_genome.fitness,"in generation", self.generation)  
             if not self.config.no_fitness_termination:
                 # End if the fitness threshold is reached.
                 fv = self.fitness_criterion(g.fitness for g in itervalues(self.population))
