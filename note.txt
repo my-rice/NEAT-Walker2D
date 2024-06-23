@@ -1,0 +1,21 @@
+
+La Password del WiFi del laboratorio è:
+    Models@2021
+
+L'account del nostro è:
+    Username: DavideRisi 
+    Password: nclab@111!
+
+Per trasferire i file sul server del professore:
+sftp -P 33555 daviderisi@193.205.164.69
+scp -P 33555 -r legged_locomotion/ daviderisi@193.205.164.69:natural_computation_project
+
+Per collegarsi sul server del professore:
+    ssh daviderisi@193.205.164.69 -p 33555
+
+Per eseguire il codice, fare screen e poi eseguire il codice:
+    screen
+    python3 main.py
+
+Per staccarsi dallo screen:
+    ctrl+a+d
