@@ -25,11 +25,11 @@ def plot_winner(file_winner_net, config):
         winner = pickle.load(f)
     print('\nBest genome:\n{!s}'.format(winner))
 
-def eval_genomes(genomes, config, seed, feed_forward):
+def eval_genomes(genomes, config, seed, feed_forward, exponent_legs):
     
     # Play game and get results
     _,genomes = zip(*genomes)
-    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME, seed=seed, feed_forward=feed_forward)
+    legged_Bio = LeggedRobotApp(genomes, config, ENV_NAME, AGENT_NAME, seed=seed, feed_forward=feed_forward, exponent_legs=exponent_legs)
     legged_Bio.play()
     results = legged_Bio.crash_info
     
@@ -64,7 +64,7 @@ def eval_genomes(genomes, config, seed, feed_forward):
 #     # at then end of the entire loop, save the best and kill the remaining slaves
 #     pass
 
-def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=True):
+def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=True, exponent_legs=1):
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -92,7 +92,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
     while count_migrations < migration_steps:
         north, south = cart_comm.Shift(0, 1)
         west, east = cart_comm.Shift(1, 1)
-        best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed, feed_forward=feed_forward)
+        best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed, feed_forward=feed_forward, exponent_legs=exponent_legs)
         pickle.dump(best, open("actual"+str(rank)+".pkl", "wb"))
         print("I am rank ", rank, " and I am in generation ", p.get_generation(), " and best fitness is ", best.fitness)
         
@@ -251,12 +251,13 @@ def run_experiment(cfg,rank=0,comm=None,size=1):
     assert cfg.migration_steps > 0
     assert cfg.seed is not None
     assert cfg.feed_forward is True or cfg.feed_forward is False
+    assert cfg.exponent_legs > 0
     ENV_NAME = cfg.env_name
     AGENT_NAME = cfg.agent_name
 
 
     logger = Logger(cfg,rank=rank,comm=comm)
-    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger, feed_forward=cfg.feed_forward) # check if is a real config
+    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger, feed_forward=cfg.feed_forward, exponent_legs=cfg.exponent_legs) # check if is a real config
     
     logger.save_results(rank=rank)
     

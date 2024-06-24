@@ -1,14 +1,15 @@
 {
     "experiments": {
-        "exp_names": ["prova", "exp2", "exp3"],
+        "exp_names": ["exp1", "exp2", "exp3", "exp4", "exp5"],
         "config_yaml": {
-            "generations": [1, 1, 1],
-            "migration_steps": [5, 4, 3],
-            "seed": [56136, 56136, 56136]
+            "generations": [750, 500, 250, 400, 100],
+            "migration_steps": [2, 3, 6, 3, 10],
+            "seed": [56136, 56136, 56136, 56136, 56136],
+            "exponent_legs": [6, 4, 2, 1, 1]
         },
         "config_neat": {
-            "pop_size": [50, 60, 70],
-            "num_hidden": [100, 100, 100]
+            "pop_size": [50, 60, 70, 80, 90],
+            "num_hidden": [0, 0, 0, 0, 0]
         }
     }
 }
