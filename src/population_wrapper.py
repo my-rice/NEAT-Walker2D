@@ -103,7 +103,7 @@ class PopulationWrapper(Population):
         self.generation += 1
         
         
-    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None, feed_forward=True):
+    def run_mpi(self, fitness_function, n=None, rank=None, logger=None, migration_step=None, seed=None, feed_forward=True, exponent_legs=1.0):
         self.rank = rank
         if self.config.no_fitness_termination and (n is None):
             raise RuntimeError("Cannot have no generational limit with no fitness termination")
@@ -120,7 +120,7 @@ class PopulationWrapper(Population):
             self.reporters.start_generation(self.generation)
             
             # Evaluate all genomes using the user-provided function.
-            fitness_function(list(iteritems(self.population)), self.config, seed, feed_forward=feed_forward)
+            fitness_function(list(iteritems(self.population)), self.config, seed, feed_forward=feed_forward, exponent_legs=exponent_legs)
 
             # Gather and report statistics.
             best = None

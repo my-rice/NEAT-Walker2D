@@ -4,10 +4,11 @@ from dm_control.utils import rewards
 import matplotlib.pyplot as plt
 
 # create a 1D array of 100 elements from 0 to 1 with a step of 0.01
-x = np.arange(0, 1, 0.01)
+x = np.arange(0, 2.05, 0.05)
 move_reward_list = []
-alternate_legs = rewards.tolerance(x,bounds=(0.45,0.55),margin=0.2,value_at_margin=0.01, sigmoid="gaussian")
-
+alternate_legs = rewards.tolerance(x,bounds=(2,2),margin=2,value_at_margin=0.01, sigmoid="linear")
+alternate_legs+=1
+alternate_legs = alternate_legs**3
 # move_reward = rewards.tolerance(x,
 #                         bounds=(1-0.1, 1+0.1),
 #                         margin=1/2,

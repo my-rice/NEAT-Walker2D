@@ -6,6 +6,7 @@ max_episodes: 300
 migration_steps: 2
 multiple_experiments: false
 neat_config: config-neat.ini
-render: true
-seed: 49846
-feed_forward: false
+render: false
+seed: 7987534
+feed_forward: False
+exponent_legs: 3

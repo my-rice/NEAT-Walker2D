@@ -129,6 +129,9 @@ class CustomPlanarWalker(walker.PlanarWalker):
         self.last_right_thigh_angle = 0
         self.left_time = 0
         self.right_time = 0
+        self.changes = 1
+        self.vel_left_foot = 0
+        self.vel_right_foot = 0
 
         self.time = 0
         self.posbefore = 0
@@ -687,6 +690,51 @@ class CustomPlanarWalker(walker.PlanarWalker):
     #         return 0
     #     alternate_legs = (self.left_time+self.right_time-np.abs(self.left_time-self.right_time))/(self.left_time+self.right_time)
 
+
+
+    # def get_reward(self, physics):
+    #     #print("Using custom reward function")
+
+    #     if physics.time() < 0.03:
+    #         self.left_dominant = True
+    #         self.last_left_thigh_angle = 0
+    #         self.last_right_thigh_angle = 0
+    #         self.left_time = 0
+    #         self.right_time = 0
+    #         self.changes = 1
+
+
+    #     standing = rewards.tolerance(physics.torso_height(),
+    #                                 bounds=(walker._STAND_HEIGHT, float('inf')),
+    #                                 margin=0.3,
+    #                                 value_at_margin=0.0,
+    #                                 sigmoid='linear'
+    #                                 )
+    #     upright = (1 + physics.torso_upright()) / 2
+    #     stand_reward = (3*standing + upright) / 4
+    #     if self._move_speed == 0:
+    #         return stand_reward
+    #     move_reward = rewards.tolerance(physics.horizontal_velocity(),
+    #                             bounds=(self._move_speed-0.1, self._move_speed+0.1),
+    #                             margin=self._move_speed/2,
+    #                             value_at_margin=0.1,
+    #                             sigmoid='linear')
+    #     walk_std = stand_reward * (5*move_reward + 1) / 6
+    #     # alternate legs reward
+
+    #     action_cost = 0
+
+    #     for i in range(6):
+    #         action_cost += physics.control()[i]**2
+    #     action_cost = action_cost/6
+    #     action_cost = rewards.tolerance(action_cost, bounds=(0.425, 0.625),value_at_margin=0.2, margin=0.225, sigmoid='hyperbolic')
+
+    #     quat_left_thigh = physics.named.data.xquat['left_thigh']
+    #     quat_right_thigh = physics.named.data.xquat['right_thigh']
+    #     quat_left_thigh = Quaternion(quat_left_thigh)
+    #     quat_right_thigh = Quaternion(quat_right_thigh)
+    #     angle_left_thigh = quat_left_thigh.angle
+    #     angle_right_thigh = quat_right_thigh.angle
         
     #     return alternate_legs*walk_std*action_cost*reward_torso
         
