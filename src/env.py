@@ -25,7 +25,7 @@ class Environment:
         if(seed is not None):
             np.random.seed(seed)
             random.seed(seed)
-        self.env = gym.make(env_name, render_mode=mode, frame_skip=1,healthy_z_range=(0.8,1.5))
+        self.env = gym.make(env_name, render_mode=mode, frame_skip=1)
         # change step number
         self.env._max_episode_steps = 5000
         self.observation = self.reset(seed=seed)

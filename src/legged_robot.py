@@ -12,7 +12,7 @@ class AvailableAgents(Enum):
 
 
 class LeggedRobot(Agent):
-
+    """ Class that inherits from Agent and implements the methods to compute the action and update the agent."""
     def __init__(self, observation_space_dim, action_space_dim, genome, config, feed_forward) -> None: # teoricamente qua dovrebbe cambiare in base all'agente che passiamo
         # We need to initialize the neural network with the given observation space and action space
         if(feed_forward == True):
@@ -33,10 +33,6 @@ class LeggedRobot(Agent):
         output = self.neural_network.activate(input)
         # compute a random action for now
         return output
-
-    def update_agent(self, fitness: float) -> None:
-        # Update the agent based on the fitness
-        raise NotImplementedError
 
     def __str__(self):
         return "Observation space dim: " + str(self.observation_space_dim) + "\nAction space dim: " + str(self.action_space_dim) + "\nAgent: LeggedRobot"

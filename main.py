@@ -16,6 +16,7 @@ import random
 import json
 import yaml
 from genome_wrapper import DefaultGenomeWrapper
+
 ENV_NAME = None
 AGENT_NAME = None
 
@@ -46,24 +47,6 @@ def eval_genomes(genomes, config, seed, feed_forward, exponent_legs):
             print(idx)  
         
 
-    # print score
-    #print('The top score was:', top_score)
-
-# def master_loop(migration_steps, bests_to_migrate, comm, size):
-
-
-#     comm.bcast(bests_to_migrate, root=0)# send to slaves number of bests to migrate
-
-#     # wait for slaves to finish and receive bests
-#     for i in range(1, size):
-#         data = comm.recv(source=i, tag=1)
-#         if(i==1):
-#             print(f"Master received data from slave {i}: {data}")
-#     # migration convention
-#     # send to slaves migrated bests or stop them
-#     # at then end of the entire loop, save the best and kill the remaining slaves
-#     pass
-
 def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=True, exponent_legs=1):
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
@@ -83,11 +66,8 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
                          neat.DefaultSpeciesSet, neat.DefaultStagnation,
                          neat_config)
 
-    # Create the population, which is the top-level object for a NEAT run.
     p = PopulationWrapper(config)
-    # Add a stdout reporter to show progress in the terminal.
-    # p.add_reporter(neat.StdOutReporter(True))
-    # Run until we achive n.
+    
     count_migrations = 0
     while count_migrations < migration_steps:
         north, south = cart_comm.Shift(0, 1)
@@ -136,9 +116,6 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
 
 
         count_migrations+=1
-        # sync receive from master what to do next
-        # if stop, break
-        # if continue, change population and continue loop
 
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
