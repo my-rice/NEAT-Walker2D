@@ -37,14 +37,15 @@ class LeggedRobotApp(object):
             #     env[1]=env[1][0]
             action = agent.compute_action(env.get_current_observation())
             _, reward, done , _=env.step(action)
-            self.experiments[count][2] = self.experiments[count][2] + reward
+            #self.experiments[count][2] = self.experiments[count][2] + reward
             env.fitness()
             if done:
-                legs_weight = env.get_total_fitness()
+                total_fitness = env.get_total_fitness()
+                #print("total fitness", total_fitness)
                 #print(self.experiments[count][2])
                 #print(self.experiments[count][2]*legs_weight)
                 #self.set_fitness(self.experiments[count][2]*legs_weight, count)
-                self.crash_info.append((agent.get_genome(), self.experiments[count][2]*legs_weight))
+                self.crash_info.append((agent.get_genome(), total_fitness))
                 del self.experiments[count]
                 #print("The environment", env.get_index(), "has been removed")
                 env.close()

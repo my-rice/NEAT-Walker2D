@@ -25,9 +25,9 @@ class Environment:
         if(seed is not None):
             np.random.seed(seed)
             random.seed(seed)
-        self.env = gym.make(env_name, render_mode=mode)
+        self.env = gym.make(env_name, render_mode=mode, frame_skip=1)
         # change step number
-        self.env._max_episode_steps = 1000
+        self.env._max_episode_steps = 5000
         self.observation = self.reset(seed=seed)
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
@@ -43,6 +43,9 @@ class Environment:
         self._move_speed = _WALK_SPEED
         self.current_fitness = 0
         self.total_fitness = 0
+
+        self.last_x_left_foot = 0
+        self.last_x_right_foot = 0
 
     def step(self, action):
         self._last_action = action
@@ -72,6 +75,8 @@ class Environment:
         self.right_time = 0
         self.total_fitness = 0
         self.current_fitness = 0
+        self.last_x_left_foot = 0
+        self.last_x_right_foot = 0
         return self.observation
 
     def render(self):
@@ -94,7 +99,12 @@ class Environment:
 
     def get_total_fitness(self):
         #return self.computed_walk_alternate()
-        return self.just_alternate_legs()
+        return self.total_fitness
+
+    def fitness(self):
+        #self.compute_standard_fitness()
+        self.compute_standard_fitness_with_x_foot_constraint()
+    
 
     def just_alternate_legs(self):
         alternate_legs = (self.left_time+self.right_time)-np.abs(self.left_time-self.right_time)+0.25
@@ -114,9 +124,12 @@ class Environment:
         alternate_legs = (self.left_time+self.right_time-np.abs(self.left_time-self.right_time))/(self.left_time+self.right_time)
         return alternate_legs*self.current_fitness
 
-    def fitness(self):
-        #self.computed_walk_alternate_fitness_with_legs()
-        self.computed_walk_alternate_fitness()
+    def get_x_left_foot(self):
+        return self.env.unwrapped.data.xpos[7][0]
+    
+    def get_x_right_foot(self):
+        return self.env.unwrapped.data.xpos[4][0]
+
 
     def computed_walk_alternate_fitness_with_legs(self):
 
@@ -337,16 +350,16 @@ class Environment:
         move_reward = rewards.tolerance(torso_velocity,
                                 bounds=(_WALK_SPEED-0.1, _WALK_SPEED+0.1),
                                 margin=_WALK_SPEED/2,
-                                value_at_margin=0.0,
+                                value_at_margin=0.3,
                                 sigmoid='linear')
-        walk_std = stand_reward * (5*move_reward + 1) / 6
+        walk_std = stand_reward * (9*move_reward + 1) / 10
 
         action_cost = 0
 
         for i in range(6):
-            action_cost += self._last_action[i]**2
+            action_cost += np.abs(self._last_action[i])
         action_cost = action_cost/6
-        action_cost = 1 - action_cost
+        action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
 
 
         reward_torso = rewards.tolerance(angle_torso,
@@ -406,6 +419,25 @@ class Environment:
         torso_height = self.observation[0]
         torso_velocity = self.observation[8]
 
+
+        left_foot = self.get_x_left_foot()
+        right_foot = self.get_x_right_foot()
+
+        if torso_height > 1.5:
+            self.current_fitness = 0
+            self.total_fitness += self.current_fitness
+            return
+
+        #print("left foot", left_foot, "right foot", right_foot)
+        if left_foot < (self.last_x_left_foot+0.1) or right_foot < (self.last_x_right_foot+0.1):
+            self.current_fitness = 0
+            self.total_fitness += self.current_fitness
+            return
+        elif left_foot > self.last_x_left_foot:
+            self.last_x_left_foot = left_foot
+        elif right_foot > self.last_x_right_foot:
+            self.last_x_right_foot = right_foot   
+
         angle = self.observation[1]
         torso_upright = np.cos(angle)
 
@@ -426,9 +458,9 @@ class Environment:
         action_cost = 0
 
 
-        # for i in range(6):
-        #     action_cost += self._last_action[i]**2
-        # action_cost = 1 - action_cost/6
+        for i in range(6):
+            action_cost += self._last_action[i]**2
+        action_cost = 1 - action_cost/6
         # action_cost = rewards.tolerance(action_cost, bounds=(0.75, 1), margin=0.75, value_at_margin=0.5, sigmoid='linear')
 
         # for i in range(6):
@@ -436,11 +468,120 @@ class Environment:
         # action_cost = action_cost/6
         # action_cost = rewards.tolerance(action_cost, bounds=(0.0, 0.2),value_at_margin=0.2, margin=0.50, sigmoid='gaussian')
 
-        for i in range(6):
-            action_cost += np.abs(self._last_action[i])
-        action_cost = action_cost/6
-        action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
+        # for i in range(6):
+        #     action_cost += np.abs(self._last_action[i])
+        # action_cost = action_cost/6
+        # action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
 
         self.current_fitness = walk_std*action_cost 
         self.total_fitness += self.current_fitness
 
+
+    def compute_standard_fitness_with_x_foot_constraint(self):
+        """ Reward function used fot "alternance_left_dominant" experiment. This reward function is made up of many components:
+        - stand_reward: reward for standing upright. It is based on the torso height and the torso uprightness
+        - move_reward: reward for moving at the desired speed which is 1 m/s
+        - walk_std: a combination of stand_reward and move_reward
+        - alternate_legs: reward for alternating legs. It is based on the angle of the left and right thighs. The reward is 1 if they follow a sinusoidal pattern
+        - action_cost: cost for using the control
+        - reward_torso: reward for keeping the torso upright. This is redundant with stand_reward but it is kept for now
+        """
+
+        torso_height = self.observation[0]
+        torso_velocity = self.observation[8]
+
+        angle = self.observation[1]
+        torso_upright = np.cos(angle)
+
+        left_foot = self.get_x_left_foot()
+        right_foot = self.get_x_right_foot()
+
+        if torso_height > 1.5:
+            self.current_fitness = 0
+            self.total_fitness += self.current_fitness
+            return
+
+        # To avoid the robot to stay still
+        if left_foot < (self.last_x_left_foot+0.001) and right_foot < (self.last_x_right_foot+0.001):
+            self.current_fitness = 0
+            self.total_fitness += self.current_fitness
+            return
+        
+        if left_foot > self.last_x_left_foot:
+            self.last_x_left_foot = left_foot
+        if right_foot > self.last_x_right_foot:
+            self.last_x_right_foot = right_foot   
+
+        standing = rewards.tolerance(torso_height,
+                                    bounds=(_STAND_HEIGHT, float('inf')),
+                                    margin=_STAND_HEIGHT/4)
+        upright = (1 + torso_upright) / 2
+        stand_reward = (3*standing + upright) / 4
+        move_reward = rewards.tolerance(torso_velocity,
+                                bounds=(self._move_speed-0.1, self._move_speed+0.1),
+                                margin=self._move_speed/2,
+                                value_at_margin=0.5,
+                                sigmoid='linear')
+        walk_std = stand_reward * (5*move_reward + 1) / 6
+        # alternate legs reward
+
+        action_cost = 0
+        angle_torso = self.observation[1]
+        
+        #print("self._last_action", self._last_action)
+        for i in range(6):
+            action_cost += self._last_action[i]**2
+        action_cost = 1 - action_cost/6
+        #action_cost = rewards.tolerance(action_cost, bounds=(0.225, 0.425),value_at_margin=0.2, margin=0.30, sigmoid='hyperbolic')
+
+        angle_right_thigh = self.observation[2]
+        angle_left_thigh = self.observation[5]
+
+        if self.left_dominant:
+            if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_left_thigh > angle_right_thigh:
+                self.left_dominant = False
+                left_reward = 1
+                right_reward = 1
+            else:
+                if angle_left_thigh > self.last_left_thigh_angle:
+                    left_reward = 1
+                    self.last_left_thigh_angle = angle_left_thigh
+                else:
+                    left_reward = 0
+                if angle_right_thigh < self.last_right_thigh_angle:
+                    self.last_right_thigh_angle = angle_right_thigh
+                    right_reward = 1
+                else:
+                    right_reward = 0
+        else:
+            if np.abs(angle_left_thigh-angle_right_thigh) > (30*np.pi/180) and angle_right_thigh > angle_left_thigh:
+                self.left_dominant = True   
+                left_reward = 1
+                right_reward = 1
+            else:
+                if angle_left_thigh < self.last_left_thigh_angle:
+                    self.last_left_thigh_angle = angle_left_thigh
+                    left_reward = 1
+                else:
+                    left_reward = 0
+                if angle_right_thigh > self.last_right_thigh_angle:
+                    self.last_right_thigh_angle = angle_right_thigh
+                    right_reward = 1
+                else:
+                    right_reward = 0
+
+        
+        
+        alternate_legs=((left_reward+right_reward) + left_reward*right_reward)/3
+        #alternate_legs = (1 + 3*alternate_legs) / 4
+
+        reward_torso = rewards.tolerance(angle_torso,
+                                bounds=(-0.21, 0.21),
+                                margin=0.05,
+                                value_at_margin=0.0,
+                                sigmoid='linear')
+        reward_torso = (1 + 3*reward_torso) / 4
+        
+        #print("walk_std", round(walk_std, 5), "action_cost", round(action_cost, 5), "reward_torso", round(reward_torso, 5), "alternate_legs", round(alternate_legs, 5),"angle_left_thigh", round(angle_left_thigh, 5), "angle_right_thigh", round(angle_right_thigh, 5))
+        self.current_fitness = (4*alternate_legs + 2*reward_torso*walk_std)/6 #+ action_cost)/7
+        self.total_fitness += self.current_fitness
