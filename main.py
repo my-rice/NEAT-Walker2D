@@ -94,7 +94,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
             for neighbor in recv_data:
                 genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb')) # is rb so there isn't problem with mutual exclusion of files
                 recv_genomes.append(genomes)
-            p.replace_n_noobs(recv_genomes)
+            p.replace_n_worst(recv_genomes)
            
         else:
             neighbors = [north, south, west, east]
@@ -111,7 +111,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
                 genomes = pickle.load(open('actual'+str(neighbor)+'.pkl', 'rb'))
                 recv_genomes.append(genomes)
 
-            p.replace_n_noobs(recv_genomes)
+            p.replace_n_worst(recv_genomes)
 
 
 
@@ -228,13 +228,13 @@ def run_experiment(cfg,rank=0,comm=None,size=1):
     assert cfg.migration_steps > 0
     assert cfg.seed is not None
     assert cfg.feed_forward is True or cfg.feed_forward is False
-    assert cfg.exponent_legs > 0
+    #assert cfg.exponent_legs > 0
     ENV_NAME = cfg.env_name
     AGENT_NAME = cfg.agent_name
 
 
     logger = Logger(cfg,rank=rank,comm=comm)
-    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger, feed_forward=cfg.feed_forward, exponent_legs=cfg.exponent_legs) # check if is a real config
+    slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger, feed_forward=cfg.feed_forward) # exponent_legs=cfg.exponent_legs) # check if is a real config
     
     logger.save_results(rank=rank)
     

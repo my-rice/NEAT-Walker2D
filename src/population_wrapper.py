@@ -24,7 +24,7 @@ class PopulationWrapper(Population):
     def get_generation(self):
         return self.generation  
     
-    def replace_n_noobs(self, genome_to_replace): # NOTE: we assume that population dict key is the genome id
+    def replace_n_worst(self, genome_to_replace): # NOTE: we assume that population dict key is the genome id
      
 
         for g in itervalues(self.population):
