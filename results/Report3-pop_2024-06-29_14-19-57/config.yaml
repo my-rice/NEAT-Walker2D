@@ -1,0 +1,12 @@
+agent_name: LeggedRobot
+env_name: Walker2d-v5
+experiment_name: Report3-pop
+exponent_legs: 1
+feed_forward: false
+generations: 200
+max_episodes: 300
+migration_steps: 2
+multiple_experiments: true
+neat_config: config-neat.ini
+render: true
+seed: 45946
