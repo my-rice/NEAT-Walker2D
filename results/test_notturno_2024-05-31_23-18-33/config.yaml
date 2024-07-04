@@ -1,9 +1,0 @@
-env_name: Walker2d-v5
-agent_name: LeggedRobot
-experiment_name: test_notturno
-max_episodes: 300
-render: true
-generations: 250
-neat_config: config-neat.ini
-migration_steps: 6
-seed: 16921842

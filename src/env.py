@@ -461,15 +461,6 @@ class Environment:
         
         alternate_legs = (1 + 3*alternate_legs) / 4
 
-                
-                
-                    
-                   
-
-        
-
-        return walk_std*alternate_legs*reward_torso
-
         self.current_fitness = alternate_legs*walk_std*reward_torso
         self.total_fitness += self.current_fitness
 

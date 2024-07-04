@@ -1,9 +1,0 @@
-env_name: Walker2d-v5
-agent_name: LeggedRobot
-experiment_name: test_bbb
-max_episodes: 300
-render: true
-generations: 120
-neat_config: config-neat.ini
-migration_steps: 4
-seed: 3921842
