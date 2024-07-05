@@ -21,12 +21,9 @@ ENV_NAME = None
 AGENT_NAME = None
 
 
-def plot_winner(file_winner_net, config):
-    with open(file_winner_net, 'rb') as f:
-        winner = pickle.load(f)
-    print('\nBest genome:\n{!s}'.format(winner))
 
 def eval_genomes(genomes, config, seed, feed_forward, exponent_legs):
+    """Callback function that runs the simulation for each genome."""
     
     # Play game and get results
     _,genomes = zip(*genomes)
@@ -48,6 +45,7 @@ def eval_genomes(genomes, config, seed, feed_forward, exponent_legs):
         
 
 def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=True, exponent_legs=1):
+    """Slave loop that runs the simulation."""
     # wait for master to start with the number of information (one of them is the number of bests to migrate)
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -70,6 +68,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
     
     count_migrations = 0
     while count_migrations < migration_steps:
+        # loop for the number of migrations steps that we want to do
         north, south = cart_comm.Shift(0, 1)
         west, east = cart_comm.Shift(1, 1)
         best = p.run_mpi(eval_genomes, n=n, rank=rank,logger=logger, migration_step=count_migrations, seed=seed, feed_forward=feed_forward, exponent_legs=exponent_legs)
@@ -78,6 +77,7 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
         
         if(count_migrations==migration_steps-1):
             try:
+                # Try to save the best genome
                 logger.save_net(best,rank)
                 print("I am rank ", rank, " and I AM DONE, best fitness is ", best.fitness)
             except:
@@ -120,12 +120,12 @@ def slave_loop(migration_steps,comm,n, neat_config,seed,logger, feed_forward=Tru
 
 @hydra.main(config_path=".", config_name="config", version_base="1.2")
 def main(cfg):
-
+    # Initialize MPI
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
 
-
+    # check if we are running multiple experiments
     if cfg.multiple_experiments:      
         # run the experiment
         num_experiments = 0
@@ -215,6 +215,7 @@ def configure_experiments_file(cfg,iteration=0):
         f.write(config_neat)
 
 def run_experiment(cfg,rank=0,comm=None,size=1):
+    """Run the experiment."""
     global ENV_NAME, AGENT_NAME
     missing_keys: set[str] = OmegaConf.missing_keys(cfg)
     if missing_keys:
@@ -234,8 +235,10 @@ def run_experiment(cfg,rank=0,comm=None,size=1):
 
 
     logger = Logger(cfg,rank=rank,comm=comm)
+    # Run the simulation
     slave_loop(migration_steps=cfg.migration_steps,comm=comm,n=cfg.generations, neat_config=cfg.neat_config, seed=cfg.seed,logger=logger, feed_forward=cfg.feed_forward) # exponent_legs=cfg.exponent_legs) # check if is a real config
     
+    # Save the results
     logger.save_results(rank=rank)
     
 if __name__ == "__main__":

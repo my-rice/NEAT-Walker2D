@@ -5,7 +5,7 @@ from itertools import count
 from neat.six_util import iteritems, iterkeys
 from neat.genes import DefaultConnectionGene, DefaultNodeGene
 class DefaultGenomeConfigWrapper(DefaultGenomeConfig):
-
+    """Wrapper around the DefaultGenomeConfig class to add the reset_node_indexer method."""
     def __init__(self, key):
         super().__init__(key)
         self.max_key = None
@@ -31,7 +31,7 @@ class DefaultGenomeConfigWrapper(DefaultGenomeConfig):
 
 
 class DefaultGenomeWrapper(DefaultGenome):
-
+    """Wrapper around the DefaultGenome class to add the parse_config method."""
     def __init__(self, key):
         """init the father"""
         super().__init__(key)
