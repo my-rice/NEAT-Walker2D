@@ -1,7 +1,21 @@
 # legged_locomotion
 Natural Computation project
 
-## How to install Mujoco for this environment
+# How to run the training code
+1. Install the required packages by running the following command:
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the training code by running the following command:
+```bash
+mpiexec --oversubscribe -np <number of processes> python3 main.py <hydra_configuration_paramters>
+```
+A real 
+
+
+
+## Common problem: How to install Mujoco for this environment
 Download the Mujoco library from this link: https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz
 
 *Create a hidden folder :*
