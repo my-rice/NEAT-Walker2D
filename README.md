@@ -1,5 +1,5 @@
 # legged_locomotion
-Natural Computation project
+Natural Computation project repository
 
 # How to run the training code
 1. Install the required packages by running the following command:
@@ -33,7 +33,7 @@ python3 evaluate_agent.py <path_to_dir_containing_models>
 ```
 A real example would be:
 ```bash
-python3 evaluate.py results/Report1-gen_2024-06-28_14-25-21/best_net_0.pkl
+python3 evaluate_agent.py results/STANDARD2-gen/best_net_1.pkl
 ```
 
 ## Common problem: How to install Mujoco for this environment
