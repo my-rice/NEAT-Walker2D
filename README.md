@@ -1,5 +1,8 @@
-# legged_locomotion
-Natural Computation project repository
+# NEAT-Walker2D
+
+# Description
+
+# Final result videos:
 
 # How to run the training code
 1. Install the required packages by running the following command:
