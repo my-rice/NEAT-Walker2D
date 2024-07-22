@@ -7,7 +7,7 @@ This repository contains the code for training a NEAT agent to solve the Walker2
 The goal of this project is to use a famous NeuroEvolution algorithm, known as NEAT, to make the Walker2D agent move forward at 1 m/s speed, and achieving stability and efficiency in the movement.  
 
 # Final result videos:
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+![alt text](https://github.com/my-rice/NEAT-Walker2D/blob/main/video/image88.gif "Logo Title Text 1")
 
 
 # How to run the training code
