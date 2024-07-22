@@ -1,8 +1,13 @@
 # NEAT-Walker2D
 
 # Description
+This repository contains the code for training a NEAT agent to solve the Walker2D environment from the OpenAI Gym. The code is based on the NEAT-Python library, but it was modified to work with mpi4py, which allows the code to run in parallel, in particular, each process runs a different population. At the end of the specified number of generations, the best agent from each population is saved to a file and shared with the near processes (this idea is named "migration" in the project). Note that at the last migration step the best agent is shared with all the processes. The code also uses the Hydra library to manage the configuration parameters. 
+
+# Project goal
+The goal of this project is to use a famous NeuroEvolution algorithm, known as NEAT, to make the Walker2D agent move forward at 1 m/s speed, and achieving stability and efficiency in the movement.  
 
 # Final result videos:
+
 
 # How to run the training code
 1. Install the required packages by running the following command:
