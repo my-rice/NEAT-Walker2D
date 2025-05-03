@@ -17,7 +17,7 @@ The goal of this project is to use a famous NeuroEvolution algorithm, known as N
 pip install -r requirements.txt
 ```
 
-To install `mpi4py`, you can follow the instructions in this ![link](https://mpi4py.readthedocs.io/en/stable/install.html)
+To install `mpi4py`, you can follow the instructions in this [link](https://mpi4py.readthedocs.io/en/stable/install.html)
 
 2. Run the training code by running the following command:
    
@@ -61,7 +61,7 @@ python3 evaluate_agent.py results/STANDARD2-gen/best_net_1.pkl
 
 ### How to install Mujoco for this environment
 
-Download the Mujoco library from this ![link](https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz)
+Download the Mujoco library from this [link](https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz)
 
 1. Create a hidden folder:
 
