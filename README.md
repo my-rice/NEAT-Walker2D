@@ -11,6 +11,7 @@ The goal of this project is to use a famous NeuroEvolution algorithm, known as N
 
 
 # How to run the training code
+
 1. Install the required packages by running the following command:
 
 ```bash
@@ -61,21 +62,21 @@ python3 evaluate_agent.py results/STANDARD2-gen/best_net_1.pkl
 
 ### How to install Mujoco for this environment
 
-Download the Mujoco library from this [link](https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz)
+1. Download the Mujoco library from this [link](https://mujoco.org/download/mujoco210-linux-x86_64.tar.gz)
 
-1. Create a hidden folder:
+2. Create a hidden folder:
 
 ```bash
 mkdir /home/username/.mujoco
 ```
 
-2. Extract the library to the `.mujoco` folder.
+3. Extract the library to the `.mujoco` folder.
 
 ```bash
 tar -xvf mujoco210-linux-x86_64.tar.gz -C ~/.mujoco/
 ```
 
-3. Include these lines in `.bashrc` file replacing username with the real username:
+4. Include these lines in `.bashrc` file replacing username with the real username:
 
 ```bash
 echo -e 'export LD_LIBRARY_PATH=/home/user-name/.mujoco/mujoco210/bin 
@@ -84,13 +85,13 @@ export PATH="$LD_LIBRARY_PATH:$PATH"
 export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libGLEW.so' >> ~/.bashrc
 ```
 
-4. Source `.bashrc`.
+5. Source `.bashrc`.
 
 ```bash
 source ~/.bashrc
 ```
 
-5. Install the following version of gymnasium
+6. Install the following version of gymnasium
 
 ```bash
 pip install gymnasium==1.0.0a1
