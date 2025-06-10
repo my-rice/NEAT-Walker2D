@@ -1,10 +1,10 @@
 
 La Password del WiFi del laboratorio è:
-    Models@2021
+    ********
 
 L'account del nostro è:
-    Username: DavideRisi 
-    Password: nclab@111!
+    Username: ********
+    Password: ********
 
 Per trasferire i file sul server del professore:
 sftp -P 33555 daviderisi@193.205.164.69
